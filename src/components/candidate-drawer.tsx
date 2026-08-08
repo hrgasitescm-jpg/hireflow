@@ -1,0 +1,298 @@
+"use client";
+
+import { useEffect, useState, useTransition } from "react";
+import { X, Mail, Download, Check, Ban, Loader2 } from "lucide-react";
+import {
+  Alert,
+  Avatar,
+  Badge,
+  Button,
+  Select,
+  Textarea,
+} from "@/components/ui";
+import { formatDate } from "@/lib/utils";
+import type { BoardApplication, BoardStage } from "@/components/pipeline-board";
+import {
+  addNote,
+  getResumeUrl,
+  moveApplicationStage,
+  setApplicationStatus,
+} from "@/app/(app)/[orgSlug]/jobs/[jobId]/actions";
+
+type DrawerNote = {
+  id: string;
+  body: string;
+  created_at: string;
+  author: string;
+};
+
+export function CandidateDrawer({
+  orgSlug,
+  jobId,
+  application,
+  stages,
+  readOnly,
+  onClose,
+}: {
+  orgSlug: string;
+  jobId: string;
+  application: BoardApplication;
+  stages: BoardStage[];
+  readOnly: boolean;
+  onClose: () => void;
+}) {
+  const { candidate } = application;
+  const [notes, setNotes] = useState<DrawerNote[]>([]);
+  const [resumePath, setResumePath] = useState<string | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(true);
+  const [noteBody, setNoteBody] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  // Tutup dengan tombol Escape (aksesibilitas)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingDetail(true);
+
+    fetch(`/api/applications/${application.id}?org=${orgSlug}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("gagal"))))
+      .then((data: { notes: DrawerNote[]; resumePath: string | null }) => {
+        if (cancelled) return;
+        setNotes(data.notes);
+        setResumePath(data.resumePath);
+      })
+      .catch(() => !cancelled && setError("Gagal memuat detail kandidat."))
+      .finally(() => !cancelled && setLoadingDetail(false));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [application.id, orgSlug]);
+
+  async function handleDownload() {
+    if (!resumePath) return;
+    const { url, error: e } = await getResumeUrl(orgSlug, resumePath);
+    if (url) window.open(url, "_blank", "noopener");
+    else setError(e ?? "Gagal membuka CV.");
+  }
+
+  function handleSubmitNote(formData: FormData) {
+    const body = String(formData.get("body") ?? "").trim();
+    if (!body) return;
+
+    startTransition(async () => {
+      const result = await addNote(orgSlug, jobId, {
+        applicationId: application.id,
+        body,
+      });
+      if (result.ok) {
+        setNoteBody("");
+        setNotes((prev) => [
+          {
+            id: crypto.randomUUID(),
+            body,
+            created_at: new Date().toISOString(),
+            author: "Kamu",
+          },
+          ...prev,
+        ]);
+      } else {
+        setError(result.error ?? "Gagal menyimpan catatan.");
+      }
+    });
+  }
+
+  function handleStatus(status: "hired" | "rejected") {
+    startTransition(async () => {
+      const result = await setApplicationStatus(orgSlug, jobId, {
+        applicationId: application.id,
+        status,
+      });
+      if (result.ok) onClose();
+      else setError(result.error ?? "Gagal mengubah status.");
+    });
+  }
+
+  function handleStageChange(stageId: string) {
+    startTransition(async () => {
+      const result = await moveApplicationStage(orgSlug, jobId, {
+        applicationId: application.id,
+        stageId,
+      });
+      if (!result.ok) setError(result.error ?? "Gagal memindahkan tahap.");
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal>
+      <div
+        className="absolute inset-0 bg-ink/30"
+        onClick={onClose}
+        aria-hidden
+      />
+
+      <div className="thin-scrollbar relative flex h-full w-full max-w-md flex-col overflow-y-auto bg-white shadow-xl">
+        <header className="sticky top-0 z-10 flex items-start gap-3 border-b border-line bg-white px-5 py-4">
+          <Avatar name={candidate.fullName} size="md" />
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-base font-semibold text-ink">
+              {candidate.fullName}
+            </h2>
+            {candidate.headline && (
+              <p className="truncate text-sm text-muted">
+                {candidate.headline}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Tutup"
+            className="rounded-control p-1.5 text-stone-400 hover:bg-line-soft hover:text-ink-soft"
+          >
+            <X className="size-5" aria-hidden />
+          </button>
+        </header>
+
+        <div className="space-y-6 px-5 py-5">
+          {error && <Alert>{error}</Alert>}
+
+          <section className="space-y-2 text-sm">
+            <div className="flex items-center gap-2 text-ink-soft">
+              <Mail className="size-4 shrink-0 text-stone-400" aria-hidden />
+              <a
+                href={`mailto:${candidate.email}`}
+                className="truncate hover:underline"
+              >
+                {candidate.email}
+              </a>
+            </div>
+            <p className="text-muted">
+              Melamar {formatDate(application.appliedAt)}
+              {candidate.yearsExp != null &&
+                ` · ${candidate.yearsExp} tahun pengalaman`}
+            </p>
+          </section>
+
+          {candidate.skills.length > 0 && (
+            <section>
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+                Skill
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
+                {candidate.skills.map((s) => (
+                  <Badge key={s}>{s}</Badge>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section className="space-y-3">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
+              Tindakan
+            </h3>
+
+            {!readOnly && (
+              <Select
+                aria-label="Pindahkan ke tahap"
+                value={application.stageId ?? ""}
+                disabled={pending}
+                onChange={(e) => handleStageChange(e.target.value)}
+              >
+                {stages.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </Select>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleDownload}
+                disabled={!resumePath || loadingDetail}
+              >
+                {loadingDetail ? (
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                ) : (
+                  <Download className="size-4" aria-hidden />
+                )}
+                {resumePath ? "Unduh CV" : "Tidak ada CV"}
+              </Button>
+
+              {!readOnly && (
+                <>
+                  <Button
+                    size="sm"
+                    onClick={() => handleStatus("hired")}
+                    disabled={pending}
+                  >
+                    <Check className="size-4" aria-hidden />
+                    Terima
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => handleStatus("rejected")}
+                    disabled={pending}
+                  >
+                    <Ban className="size-4" aria-hidden />
+                    Tolak
+                  </Button>
+                </>
+              )}
+            </div>
+          </section>
+
+          <section>
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+              Catatan tim
+            </h3>
+
+            <form action={handleSubmitNote} className="space-y-2">
+              <Textarea
+                name="body"
+                rows={3}
+                value={noteBody}
+                onChange={(e) => setNoteBody(e.target.value)}
+                placeholder="Tulis catatan untuk tim…"
+                maxLength={5000}
+              />
+              <Button type="submit" size="sm" disabled={pending || !noteBody.trim()}>
+                {pending && <Loader2 className="size-4 animate-spin" aria-hidden />}
+                Simpan catatan
+              </Button>
+            </form>
+
+            <ul className="mt-4 space-y-3">
+              {loadingDetail && (
+                <li className="text-sm text-stone-400">Memuat…</li>
+              )}
+              {!loadingDetail && notes.length === 0 && (
+                <li className="text-sm text-stone-400">Belum ada catatan.</li>
+              )}
+              {notes.map((n) => (
+                <li key={n.id} className="rounded-control bg-line-soft p-3">
+                  <p className="whitespace-pre-wrap text-sm text-ink-soft">
+                    {n.body}
+                  </p>
+                  <p className="mt-1.5 text-xs text-stone-400">
+                    {n.author} · {formatDate(n.created_at)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}

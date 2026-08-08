@@ -1,0 +1,9 @@
+# Normalisasi line ending: repo selalu menyimpan LF.
+# Tanpa ini, kontributor dengan core.autocrlf=false bisa meng-commit CRLF,
+# dan script bash di CI Ubuntu akan gagal dengan error "\r: command not found".
+* text=auto eol=lf
+
+# File biner: jangan pernah disentuh normalisasi.
+*.png binary
+*.woff2 binary
+*.zip binary

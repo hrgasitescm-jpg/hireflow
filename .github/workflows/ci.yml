@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+          SUPABASE_SERVICE_ROLE_KEY: placeholder
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
+  # Test isolasi multi-tenant: membuktikan RLS benar-benar memisahkan data
+  # antar-organisasi. Kalau ini gagal, JANGAN deploy.
+  rls:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL 16
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16
+      - name: Run tenant isolation tests
+        run: |
+          sudo chmod -R a+rX "$GITHUB_WORKSPACE"
+          sudo -u postgres env \
+            PGBIN=/usr/lib/postgresql/16/bin \
+            TMPDIR=/tmp \
+            bash "$GITHUB_WORKSPACE/supabase/tests/run.sh"

@@ -1,0 +1,26 @@
+name: Keepalive Supabase
+
+# Supabase Free mem-pause project setelah 7 hari tanpa aktivitas database.
+# Workflow ini memanggil endpoint /api/cron/keepalive setiap 6 jam.
+#
+# Secrets yang perlu diisi di Settings > Secrets and variables > Actions:
+#   APP_URL     -> https://domain-aplikasimu.com
+#   CRON_SECRET -> nilai yang sama dengan variabel CRON_SECRET di hosting
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping keepalive endpoint
+        run: |
+          code=$(curl -sS -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/keepalive")
+          echo "HTTP $code"
+          cat /tmp/out.json
+          test "$code" = "200"
