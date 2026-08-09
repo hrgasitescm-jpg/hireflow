@@ -183,13 +183,12 @@ export default async function JobDetailPage({
        pekerjaan yang selebar 1024px melelahkan dibaca. */
     <>
       <CareerHeader org={org} />
-      <article className="mx-auto max-w-5xl px-6 py-14 sm:py-16">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <article className="mx-auto max-w-5xl px-6 py-12 sm:py-14">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
 
-      <div className="max-w-3xl">
         <Link
           href={`/karier/${org.slug}`}
           className="inline-flex items-center gap-1.5 text-small font-medium text-muted transition-colors hover:text-ink"
@@ -198,58 +197,81 @@ export default async function JobDetailPage({
           Semua posisi
         </Link>
 
-        <header className="mt-6 border-b border-line pb-9">
-          <h1 className="text-display text-ink">{job.title}</h1>
+        <h1 className="mt-6 max-w-3xl text-display text-ink">{job.title}</h1>
 
-          {/* Metadata jadi kartu berlatar, bukan daftar telanjang. Untuk
-              lowongan yang deskripsinya belum diisi, baris inilah satu-satunya
-              informasi yang dimiliki pelamar — pantas diberi bentuk. */}
-          <dl className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {department && <Meta label="Departemen" value={department.name} />}
-            {location && <Meta label="Lokasi" value={location.name} />}
-            <Meta
-              label="Tipe"
-              value={EMPLOYMENT_TYPE_LABEL[job.employment_type] ?? "-"}
-            />
-            <Meta
-              label="Mode kerja"
-              value={workModeLabel(job.work_mode)}
-            />
-            {salary && <Meta label="Gaji / bulan" value={salary} accent />}
-            {job.openings > 1 && (
-              <Meta label="Slot tersedia" value={String(job.openings)} />
-            )}
-          </dl>
+        {/* ----------------------------------------------------------------
+            Dua kolom.
 
-          <a
-            href="#lamar"
-            className={buttonClass({
-              size: "lg",
-              className: "mt-8 w-full sm:w-auto",
-            })}
-          >
-            Lamar posisi ini
-          </a>
-        </header>
-
-        {/* Wadah deskripsi hanya dirender kalau memang ada isinya. Versi lama
-            selalu merendernya, sehingga lowongan tanpa deskripsi menyisakan
-            ruang hampa di antara dua garis — terbaca seperti halaman rusak. */}
-        {hasContent && (
-          <div className="mt-12 space-y-12">
-            {job.description && (
-              <Prose title="Deskripsi pekerjaan" content={job.description} />
+            Versi sebelumnya menumpuk semuanya dalam satu kolom selebar 3xl di
+            dalam wadah 5xl, sehingga separuh layar kanan menganga kosong.
+            Ringkasan lowongan dipindahkan ke kolom kanan yang menempel saat
+            digulir — itu mengisi ruang yang tadinya terbuang, dan membuat
+            tombol lamar selalu terlihat, bukan hanya di bagian paling atas.
+            ---------------------------------------------------------------- */}
+        <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_19rem] lg:gap-14">
+          <div className="min-w-0">
+            {hasContent ? (
+              <div className="space-y-11">
+                {job.description && (
+                  <Prose title="Deskripsi pekerjaan" content={job.description} />
+                )}
+                {job.requirements && (
+                  <Prose title="Kualifikasi" content={job.requirements} />
+                )}
+                {job.benefits && <Prose title="Benefit" content={job.benefits} />}
+              </div>
+            ) : (
+              /* Tanpa ini, kolom kiri kosong melompong dan tata letaknya
+                 terlihat patah. Kalimatnya jujur: deskripsinya memang belum
+                 ada, dan pelamar tetap dipersilakan mengirim lamaran. */
+              <div className="rounded-surface border border-dashed border-line-strong bg-line-soft/40 px-6 py-10">
+                <p className="text-heading text-ink">
+                  Deskripsi lengkap belum tersedia
+                </p>
+                <p className="mt-2 max-w-md text-small leading-relaxed text-muted">
+                  Rincian tugas dan kualifikasi posisi ini akan kami sampaikan
+                  saat proses seleksi. Silakan kirim lamaran, tim kami akan
+                  menghubungi kamu.
+                </p>
+              </div>
             )}
-            {job.requirements && (
-              <Prose title="Kualifikasi" content={job.requirements} />
-            )}
-            {job.benefits && <Prose title="Benefit" content={job.benefits} />}
           </div>
-        )}
+
+          {/* Ringkasan yang menempel saat digulir */}
+          <aside className="lg:sticky lg:top-8 lg:self-start">
+            <div className="rounded-surface border border-line bg-surface p-5 shadow-xs">
+              <dl>
+                {department && (
+                  <Meta label="Departemen" value={department.name} />
+                )}
+                {location && <Meta label="Lokasi" value={location.name} />}
+                <Meta
+                  label="Tipe"
+                  value={EMPLOYMENT_TYPE_LABEL[job.employment_type] ?? "-"}
+                />
+                <Meta label="Mode kerja" value={workModeLabel(job.work_mode)} />
+                {salary && <Meta label="Gaji / bulan" value={salary} accent />}
+                {job.openings > 1 && (
+                  <Meta label="Slot tersedia" value={String(job.openings)} />
+                )}
+              </dl>
+
+              <a
+                href="#lamar"
+                className={buttonClass({
+                  size: "lg",
+                  className: "mt-6 w-full",
+                })}
+              >
+                Lamar posisi ini
+              </a>
+            </div>
+          </aside>
+        </div>
 
         <section
           id="lamar"
-          className="mt-14 scroll-mt-8 border-t border-line pt-10"
+          className="mt-16 max-w-3xl scroll-mt-8 border-t border-line pt-10"
         >
           <h2 className="text-title text-ink">Lamar posisi ini</h2>
           <p className="mt-3 text-body text-muted">
@@ -263,7 +285,6 @@ export default async function JobDetailPage({
             questions={questions}
           />
         </section>
-        </div>
       </article>
     </>
   );
@@ -278,20 +299,17 @@ function Meta({
   value: string;
   accent?: boolean;
 }) {
+  /* Tanpa kotak sendiri. Meta kini berada di dalam kartu ringkasan di kolom
+     kanan, dan kotak di dalam kotak membuat sisi itu terlihat penuh. Yang
+     accent tetap diberi warna karena gaji adalah angka yang dicari duluan. */
   return (
-    <div
-      className={
-        accent
-          ? "rounded-control bg-gold-50 px-3.5 py-3 ring-1 ring-inset ring-gold-200"
-          : "rounded-control bg-line-soft px-3.5 py-3 ring-1 ring-inset ring-line"
-      }
-    >
-      <dt className="text-label uppercase text-muted">{label}</dt>
+    <div className="flex items-baseline justify-between gap-3 border-b border-line pb-3 last:border-0 last:pb-0">
+      <dt className="shrink-0 text-label uppercase text-muted">{label}</dt>
       <dd
         className={
           accent
-            ? "mt-1.5 text-body font-semibold text-gold-800"
-            : "mt-1.5 text-body font-medium text-ink"
+            ? "text-right text-small font-semibold text-gold-800"
+            : "text-right text-small font-medium text-ink"
         }
       >
         {value}
