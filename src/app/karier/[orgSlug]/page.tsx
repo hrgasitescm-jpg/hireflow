@@ -163,7 +163,9 @@ export default async function CareerPage({
 
            Warna teks dinaikkan dari muted ke ink-soft: ini paragraf utama
            yang dibaca pelamar, bukan keterangan sampingan. */
-        <div className="mt-10 max-w-3xl">
+        <section className="mt-14">
+          <h2 className="text-title text-ink">Tentang perusahaan</h2>
+          <div className="mt-5 max-w-3xl">
           {org.about && (
             <RichContent
               value={org.about}
@@ -183,7 +185,8 @@ export default async function CareerPage({
               Situs perusahaan
             </a>
           )}
-        </div>
+          </div>
+        </section>
       )}
 
       {/* ------------------------------------------------------------------
@@ -230,7 +233,11 @@ export default async function CareerPage({
           bukan alasan utama orang melamar, jadi tidak pantas memakai ruang
           sebanyak itu.
           ------------------------------------------------------------------ */}
-      <section className="mt-12 rounded-surface bg-line-soft/70 px-6 py-7 ring-1 ring-inset ring-line">
+      {/* Jarak lebih rapat dari antarbagian (mt-6, bukan mt-16) karena pita
+          ini kelanjutan dari bagian nilai di atasnya, bukan bagian baru.
+          Jarak yang sama akan membuatnya terbaca sebagai bagian terpisah tanpa
+          judul — persis kekeliruan yang tadi terjadi pada paragraf perusahaan. */}
+      <section className="mt-6 rounded-surface bg-line-soft/70 px-6 py-7 ring-1 ring-inset ring-line">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {BENEFITS.map(({ icon: Icon, title, body }) => (
             <div key={title} className="flex gap-3">
@@ -250,7 +257,7 @@ export default async function CareerPage({
       </section>
 
       {/* Daftar posisi */}
-      <div className="mt-14 min-w-0">
+      <div className="mt-16 min-w-0">
         <div className="flex items-end justify-between gap-4 border-b border-line pb-4">
           <div>
             <h2 className="text-title text-ink">Posisi terbuka</h2>
