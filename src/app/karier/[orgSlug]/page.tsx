@@ -95,11 +95,17 @@ export default async function CareerPage({
       {/* Deskripsi perusahaan dan tautan situs, di bawah hero mana pun yang
           sedang tampil. */}
       {(org.about || org.website) && (
-        <div className="mt-8 flex flex-wrap items-start justify-between gap-6">
+        /* Tombol diturunkan ke bawah paragraf, bukan disandingkan di kanannya.
+           Sebelumnya ia sejajar dengan baris pertama teks, menghasilkan baris
+           yang berat sebelah dan paragraf yang terpotong lebarnya tanpa alasan.
+
+           Warna teks dinaikkan dari muted ke ink-soft: ini paragraf utama
+           yang dibaca pelamar, bukan keterangan sampingan. */
+        <div className="mt-10 max-w-3xl">
           {org.about && (
             <RichContent
               value={org.about}
-              className="max-w-2xl text-body leading-relaxed text-muted"
+              className="text-[1.0625rem] leading-relaxed text-ink-soft"
             />
           )}
           {org.website && (
@@ -107,7 +113,10 @@ export default async function CareerPage({
               href={org.website}
               target="_blank"
               rel="noreferrer noopener"
-              className={buttonClass({ variant: "secondary" })}
+              className={buttonClass({
+                variant: "secondary",
+                className: org.about ? "mt-6" : "",
+              })}
             >
               Situs perusahaan
             </a>
@@ -117,9 +126,16 @@ export default async function CareerPage({
 
       {/* Daftar posisi */}
       <div className="mt-14 min-w-0">
-        <div className="flex items-baseline justify-between border-b border-line pb-4">
-          <h2 className="text-heading text-ink">Posisi terbuka</h2>
-          <span className="tabular rounded-full bg-line-soft px-2.5 py-0.5 text-caption font-semibold text-ink-soft ring-1 ring-inset ring-line">
+        <div className="flex items-end justify-between gap-4 border-b border-line pb-4">
+          <div>
+            <h2 className="text-title text-ink">Posisi terbuka</h2>
+            <p className="mt-1.5 text-small text-muted">
+              {jobs.length > 0
+                ? "Klik posisi untuk melihat rincian dan mengirim lamaran."
+                : "Belum ada posisi yang sedang dibuka."}
+            </p>
+          </div>
+          <span className="tabular shrink-0 rounded-full bg-line-soft px-3 py-1 text-body font-semibold text-ink ring-1 ring-inset ring-line">
             {jobs.length}
           </span>
         </div>
@@ -163,25 +179,39 @@ export default async function CareerPage({
               <li key={job.id}>
                 <Link
                   href={`/karier/${org.slug}/${job.slug}`}
-                  className="group flex items-center gap-5 rounded-surface border border-line bg-surface px-6 py-5 transition-[box-shadow,border-color,transform] hover:-translate-y-px hover:border-line-strong hover:shadow-md"
+                  className="group flex items-center gap-6 rounded-surface border border-line bg-surface px-6 py-6 transition-[box-shadow,border-color,transform] hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md"
                 >
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-heading text-ink transition-colors group-hover:text-gold-700">
+                    <h3 className="text-title text-ink transition-colors group-hover:text-gold-700">
                       {job.title}
                     </h3>
-                    <p className="mt-2 text-small text-muted">
-                      {meta.join("  ·  ")}
-                    </p>
-                    {salary && (
-                      <p className="mt-3 inline-flex rounded-control bg-gold-50 px-2.5 py-1 text-caption font-semibold text-gold-800 ring-1 ring-inset ring-gold-200">
-                        {salary}
-                      </p>
-                    )}
+
+                    {/* Metadata jadi keping terpisah, bukan satu baris dipisah
+                        titik. Mata memindai daftar lowongan dengan mencari
+                        lokasi dan tipe kerja — keduanya lebih cepat ditemukan
+                        sebagai bentuk sendiri daripada di tengah kalimat. */}
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      {meta.map((m) => (
+                        <span
+                          key={String(m)}
+                          className="rounded-full bg-line-soft px-2.5 py-1 text-caption font-medium text-ink-soft ring-1 ring-inset ring-line"
+                        >
+                          {m}
+                        </span>
+                      ))}
+                      {salary && (
+                        <span className="rounded-full bg-gold-50 px-2.5 py-1 text-caption font-semibold text-gold-800 ring-1 ring-inset ring-gold-200">
+                          {salary}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <ArrowRight
-                    className="size-4.5 shrink-0 text-subtle transition-all group-hover:translate-x-0.5 group-hover:text-gold-600"
-                    aria-hidden
-                  />
+
+                  {/* Panah dalam lingkaran — pada kartu selebar ini, panah
+                      telanjang terlihat seperti ornamen, bukan ajakan. */}
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-line-soft text-ink-soft transition-colors group-hover:bg-ink group-hover:text-white">
+                    <ArrowRight className="size-4.5" aria-hidden />
+                  </span>
                 </Link>
               </li>
             );
