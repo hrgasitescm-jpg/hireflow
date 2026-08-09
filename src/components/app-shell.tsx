@@ -136,16 +136,18 @@ export function AppShell({
             )}
           </>
         ) : (
-          <div className="flex items-center gap-2.5 rounded-control bg-line-soft px-2.5 py-2.5">
-            <OrgBadge org={membership.org} />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-small font-semibold text-ink">
-                {orgName}
-              </span>
-              <span className="block text-caption text-muted">
-                {ROLE_LABEL[membership.role]}
-              </span>
-            </span>
+          /* Tanpa lambang di sini.
+             Dengan satu organisasi, logo di kepala sidebar sudah logo
+             perusahaan yang sama — menampilkannya lagi di baris ini membuat
+             logonya terlihat dobel. Lambang hanya berguna pada mode banyak
+             organisasi, di mana ia membedakan satu organisasi dari yang lain. */
+          <div className="rounded-control bg-line-soft px-3 py-2.5">
+            <p className="truncate text-small font-semibold text-ink">
+              {orgName}
+            </p>
+            <p className="text-caption text-muted">
+              {ROLE_LABEL[membership.role]}
+            </p>
           </div>
         )}
       </div>
