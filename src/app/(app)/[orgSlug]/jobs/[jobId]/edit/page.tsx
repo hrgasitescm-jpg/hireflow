@@ -20,7 +20,7 @@ export default async function EditJobPage({
   if (!canManage(membership.role)) redirect(`/${orgSlug}/jobs`);
 
   const supabase = await createClient();
-  const [jobRes, departments, locations, stagesRes, questionsRes] =
+  const [jobRes, departments, locations, workModes, stagesRes, questionsRes] =
     await Promise.all([
     supabase.from("jobs").select("*").eq("id", jobId).maybeSingle(),
     supabase
@@ -33,6 +33,11 @@ export default async function EditJobPage({
       .select("id, name")
       .eq("org_id", membership.org.id)
       .order("name"),
+    supabase
+      .from("work_modes")
+      .select("id, name")
+      .eq("org_id", membership.org.id)
+      .order("position"),
     supabase
       .from("job_stages")
       .select("id, name, position, kind")
@@ -90,6 +95,7 @@ export default async function EditJobPage({
         action={action}
         departments={departments.data ?? []}
         locations={locations.data ?? []}
+        workModes={workModes.data ?? []}
         cancelHref={`/${orgSlug}/jobs/${jobId}/pipeline`}
         submitLabel="Simpan perubahan"
         initialValues={{

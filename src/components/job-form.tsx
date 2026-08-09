@@ -58,6 +58,7 @@ export function JobForm({
   action,
   departments,
   locations,
+  workModes,
   initialValues,
   cancelHref,
   submitLabel,
@@ -65,6 +66,7 @@ export function JobForm({
 }: {
   action: (prev: JobState, formData: FormData) => Promise<JobState>;
   departments: Option[];
+  workModes: Option[];
   locations: Option[];
   initialValues?: Partial<JobFormValues>;
   cancelHref: string;
@@ -151,9 +153,14 @@ export function JobForm({
 
           <Field label="Mode kerja" htmlFor="workMode" required>
             <Select id="workMode" name="workMode" defaultValue={values.workMode}>
-              <option value="onsite">Di kantor</option>
-              <option value="hybrid">Hybrid</option>
-              <option value="remote">Remote</option>
+              {workModes.length === 0 && (
+                <option value="">— Belum ada mode kerja —</option>
+              )}
+              {workModes.map((m) => (
+                <option key={m.id} value={m.name}>
+                  {m.name}
+                </option>
+              ))}
             </Select>
           </Field>
 

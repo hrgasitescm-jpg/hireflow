@@ -4,11 +4,16 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { buttonClass } from "@/components/ui";
 import { CareerHeader } from "../career-header";
-import { getPublicJob, getPublicOrg, getJobQuestions } from "@/lib/public-data";
+import {
+  getPublicJob,
+  getPublicOrg,
+  getJobQuestions,
+  getRemoteWorkModes,
+} from "@/lib/public-data";
 import { env } from "@/lib/env";
 import {
   EMPLOYMENT_TYPE_LABEL,
-  WORK_MODE_LABEL,
+  workModeLabel,
   formatSalaryRange,
 } from "@/lib/utils";
 import { ApplyForm } from "./apply-form";
@@ -97,6 +102,7 @@ export default async function JobDetailPage({
   if (!job) notFound();
 
   const questions = await getJobQuestions(job.id);
+  const remoteModes = await getRemoteWorkModes(org.id);
   const department = job.departments as unknown as { name: string } | null;
   const location = job.locations as unknown as {
     name: string;
@@ -140,7 +146,7 @@ export default async function JobDetailPage({
       sameAs: org.website ?? undefined,
       logo: org.logo_url ?? undefined,
     },
-    jobLocationType: job.work_mode === "remote" ? "TELECOMMUTE" : undefined,
+    jobLocationType: remoteModes.has(job.work_mode) ? "TELECOMMUTE" : undefined,
     jobLocation: location
       ? {
           "@type": "Place",
@@ -207,7 +213,7 @@ export default async function JobDetailPage({
             />
             <Meta
               label="Mode kerja"
-              value={WORK_MODE_LABEL[job.work_mode] ?? "-"}
+              value={workModeLabel(job.work_mode)}
             />
             {salary && <Meta label="Gaji / bulan" value={salary} accent />}
             {job.openings > 1 && (

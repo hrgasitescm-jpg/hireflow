@@ -331,6 +331,30 @@ export type Database = {
           },
         ];
       };
+      work_modes: {
+        Row: {
+          id: string;
+          org_id: string;
+          name: string;
+          is_remote: boolean;
+          position: number;
+        };
+        Insert: {
+          id?: string;
+          org_id: string;
+          name: string;
+          is_remote?: boolean;
+          position?: number;
+        };
+        Update: {
+          id?: string;
+          org_id?: string;
+          name?: string;
+          is_remote?: boolean;
+          position?: number;
+        };
+        Relationships: [];
+      };
       departments: {
         Row: {
           id: string;

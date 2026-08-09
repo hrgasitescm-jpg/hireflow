@@ -92,11 +92,21 @@ export function initials(name: string): string {
     .join("");
 }
 
-export const WORK_MODE_LABEL: Record<string, string> = {
+/**
+ * Kode mode kerja lama, dari masa nilainya dikunci di database.
+ * Lowongan baru menyimpan labelnya langsung, jadi peta ini hanya menerjemahkan
+ * data lama yang belum sempat dimigrasikan.
+ */
+const LEGACY_WORK_MODE: Record<string, string> = {
   onsite: "Di kantor",
   hybrid: "Hybrid",
   remote: "Remote",
 };
+
+export function workModeLabel(value: string | null | undefined): string {
+  if (!value) return "-";
+  return LEGACY_WORK_MODE[value] ?? value;
+}
 
 export const EMPLOYMENT_TYPE_LABEL: Record<string, string> = {
   full_time: "Penuh waktu",

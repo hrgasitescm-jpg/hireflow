@@ -76,3 +76,21 @@ export const getJobQuestions = cache(async (jobId: string) => {
     .order("position");
   return data ?? [];
 });
+
+/**
+ * Nama mode kerja yang ditandai jarak jauh.
+ *
+ * Dipakai untuk data terstruktur Google Jobs: jobLocationType TELECOMMUTE
+ * hanya boleh dipasang pada lowongan yang benar-benar jarak jauh. Dulu ini
+ * cukup dibandingkan dengan kode 'remote', tapi mode kerja kini dikelola tiap
+ * organisasi sendiri sehingga namanya bisa apa saja.
+ */
+export const getRemoteWorkModes = cache(async (orgId: string) => {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("work_modes")
+    .select("name")
+    .eq("org_id", orgId)
+    .eq("is_remote", true);
+  return new Set((data ?? []).map((r) => r.name));
+});

@@ -18,7 +18,7 @@ export default async function NewJobPage({
   if (!canManage(membership.role)) redirect(`/${orgSlug}/jobs`);
 
   const supabase = await createClient();
-  const [departments, locations] = await Promise.all([
+  const [departments, locations, workModes] = await Promise.all([
     supabase
       .from("departments")
       .select("id, name")
@@ -29,6 +29,11 @@ export default async function NewJobPage({
       .select("id, name")
       .eq("org_id", membership.org.id)
       .order("name"),
+    supabase
+      .from("work_modes")
+      .select("id, name")
+      .eq("org_id", membership.org.id)
+      .order("position"),
   ]);
 
   async function action(prev: JobState, formData: FormData) {
@@ -46,6 +51,7 @@ export default async function NewJobPage({
         action={action}
         departments={departments.data ?? []}
         locations={locations.data ?? []}
+        workModes={workModes.data ?? []}
         cancelHref={`/${orgSlug}/jobs`}
         submitLabel="Simpan lowongan"
         showPublishToggle

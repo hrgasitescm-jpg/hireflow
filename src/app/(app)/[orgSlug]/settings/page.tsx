@@ -24,7 +24,8 @@ export default async function SettingsPage({
   const user = await requireUser();
   const supabase = await createClient();
 
-  const [orgRes, membersRes, departmentsRes, locationsRes] = await Promise.all([
+  const [orgRes, membersRes, departmentsRes, locationsRes, workModesRes] =
+    await Promise.all([
     supabase
       .from("organizations")
       .select("id, name, slug, about, website, brand_color")
@@ -45,6 +46,11 @@ export default async function SettingsPage({
       .select("id, name")
       .eq("org_id", membership.org.id)
       .order("name"),
+    supabase
+      .from("work_modes")
+      .select("id, name, is_remote")
+      .eq("org_id", membership.org.id)
+      .order("position"),
   ]);
 
   const org = orgRes.data;
@@ -92,6 +98,31 @@ export default async function SettingsPage({
               Hanya Pemilik dan Admin yang bisa mengubah profil organisasi.
             </Alert>
           )}
+        </Card>
+
+        {/* ----------------------------------------------------------------
+            Mode kerja
+
+            Dulu nilainya dikunci di database, utils.ts, dan form sekaligus —
+            berisi istilah pekerjaan kantoran yang tidak cocok untuk
+            pertambangan. Sekarang dikelola di sini.
+            ---------------------------------------------------------------- */}
+        <Card className="p-5">
+          <h2 className="mb-1 text-heading text-ink">Mode kerja</h2>
+          <p className="mb-4 text-small text-muted">
+            Mengisi dropdown Mode kerja saat membuat lowongan. Tandai{" "}
+            <strong className="font-semibold text-ink-soft">Jarak jauh</strong>{" "}
+            pada mode yang benar-benar bekerja dari mana saja — penanda itu
+            dipakai Google Jobs untuk mengenali lowongan remote.
+          </p>
+          <TermManager
+            orgSlug={orgSlug}
+            kind="work_modes"
+            terms={workModesRes.data ?? []}
+            canEdit={isManager}
+            withRemoteFlag
+            emptyHint="Belum ada mode kerja. Tambahkan supaya bisa dipilih di form lowongan."
+          />
         </Card>
 
         {/* ----------------------------------------------------------------

@@ -6,7 +6,7 @@ import { getPublicJobs, getPublicOrg } from "@/lib/public-data";
 import { buttonClass } from "@/components/ui";
 import {
   EMPLOYMENT_TYPE_LABEL,
-  WORK_MODE_LABEL,
+  workModeLabel,
   formatSalaryRange,
 } from "@/lib/utils";
 
@@ -153,7 +153,7 @@ export default async function CareerPage({
             const meta = [
               department?.name,
               location?.name,
-              WORK_MODE_LABEL[job.work_mode],
+              workModeLabel(job.work_mode),
               EMPLOYMENT_TYPE_LABEL[job.employment_type],
             ].filter(Boolean);
 

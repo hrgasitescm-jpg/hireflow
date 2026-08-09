@@ -17,12 +17,13 @@ import { requireMembership, canManage } from "@/lib/auth";
  * mentah dari database.
  */
 
-const KINDS = ["departments", "locations"] as const;
+const KINDS = ["departments", "locations", "work_modes"] as const;
 export type TermKind = (typeof KINDS)[number];
 
 const LABEL: Record<TermKind, string> = {
   departments: "Departemen",
   locations: "Lokasi",
+  work_modes: "Mode kerja",
 };
 
 export type TermState = { error?: string; success?: boolean };
@@ -59,9 +60,21 @@ export async function createTerm(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from(kind)
-    .insert({ org_id: membership.org.id, name: parsed.data });
+
+  /* Jalurnya dipisah per tabel, bukan satu .from(kind) dengan payload
+     bercabang. TypeScript menyatukan tipe ketiga tabel kalau nama tabelnya
+     berupa union, sehingga kolom is_remote yang hanya ada di work_modes
+     ditolak. Memisahkan cabang membuat tiap panggilan punya satu tipe pasti. */
+  const { error } =
+    kind === "work_modes"
+      ? await supabase.from("work_modes").insert({
+          org_id: membership.org.id,
+          name: parsed.data,
+          is_remote: formData.get("isRemote") === "on",
+        })
+      : await supabase
+          .from(kind)
+          .insert({ org_id: membership.org.id, name: parsed.data });
 
   if (error) {
     if (error.code === UNIQUE_VIOLATION) {
@@ -95,11 +108,22 @@ export async function renameTerm(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from(kind)
-    .update({ name: parsed.data })
-    .eq("id", id)
-    .eq("org_id", membership.org.id);
+
+  const { error } =
+    kind === "work_modes"
+      ? await supabase
+          .from("work_modes")
+          .update({
+            name: parsed.data,
+            is_remote: formData.get("isRemote") === "on",
+          })
+          .eq("id", id)
+          .eq("org_id", membership.org.id)
+      : await supabase
+          .from(kind)
+          .update({ name: parsed.data })
+          .eq("id", id)
+          .eq("org_id", membership.org.id);
 
   if (error) {
     if (error.code === UNIQUE_VIOLATION) {

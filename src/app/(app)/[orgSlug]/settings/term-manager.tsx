@@ -9,10 +9,10 @@ import {
   type TermKind,
   type TermState,
 } from "./taxonomy-actions";
-import { Alert, Button, Input } from "@/components/ui";
+import { Alert, Badge, Button, Checkbox, Input } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
 
-export type Term = { id: string; name: string };
+export type Term = { id: string; name: string; is_remote?: boolean };
 
 /**
  * Pengelola daftar sederhana untuk Departemen dan Lokasi.
@@ -27,12 +27,15 @@ export function TermManager({
   terms,
   canEdit,
   emptyHint,
+  /** Hanya untuk mode kerja: menandai mana yang berarti kerja jarak jauh. */
+  withRemoteFlag = false,
 }: {
   orgSlug: string;
   kind: TermKind;
   terms: Term[];
   canEdit: boolean;
   emptyHint: string;
+  withRemoteFlag?: boolean;
 }) {
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -88,6 +91,15 @@ export function TermManager({
                     aria-label={`Ubah nama ${term.name}`}
                     className="h-8 flex-1 text-small"
                   />
+                  {withRemoteFlag && (
+                    <label className="flex shrink-0 items-center gap-1.5 text-caption text-ink-soft">
+                      <Checkbox
+                        name="isRemote"
+                        defaultChecked={term.is_remote}
+                      />
+                      Jarak jauh
+                    </label>
+                  )}
                   <SubmitButton size="sm" variant="primary">
                     <Check className="size-3.5" aria-hidden />
                     Simpan
@@ -107,6 +119,9 @@ export function TermManager({
                   <span className="min-w-0 flex-1 truncate text-small text-ink">
                     {term.name}
                   </span>
+                  {withRemoteFlag && term.is_remote && (
+                    <Badge tone="gold">Jarak jauh</Badge>
+                  )}
                   {canEdit && (
                     <>
                       <Button
@@ -155,6 +170,12 @@ export function TermManager({
               aria-label="Nama baru"
               className="h-9 flex-1 text-small"
             />
+            {withRemoteFlag && (
+              <label className="flex shrink-0 items-center gap-1.5 text-caption text-ink-soft">
+                <Checkbox name="isRemote" />
+                Jarak jauh
+              </label>
+            )}
             <SubmitButton size="sm">Tambah</SubmitButton>
             <Button
               type="button"

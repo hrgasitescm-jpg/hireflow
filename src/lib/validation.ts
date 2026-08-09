@@ -62,7 +62,9 @@ export const jobSchema = z
     slug: slugSchema,
     departmentId: z.union([z.uuid(), z.literal("")]).optional(),
     locationId: z.union([z.uuid(), z.literal("")]).optional(),
-    workMode: z.enum(["onsite", "hybrid", "remote"]),
+    // Bukan enum lagi: daftarnya dikelola per organisasi lewat tabel
+    // work_modes, jadi nilainya tidak bisa diketahui di waktu kompilasi.
+    workMode: z.string().trim().min(2, "Mode kerja wajib dipilih").max(60),
     employmentType: z.enum([
       "full_time",
       "part_time",

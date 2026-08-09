@@ -14,7 +14,7 @@ import {
 import {
   EMPLOYMENT_TYPE_LABEL,
   JOB_STATUS_LABEL,
-  WORK_MODE_LABEL,
+  workModeLabel,
   timeAgo,
 } from "@/lib/utils";
 
@@ -85,7 +85,7 @@ export default async function JobsPage({
             const location = job.locations as unknown as { name: string } | null;
             const meta = [
               location?.name,
-              WORK_MODE_LABEL[job.work_mode],
+              workModeLabel(job.work_mode),
               EMPLOYMENT_TYPE_LABEL[job.employment_type],
               job.openings > 1 ? `${job.openings} slot` : null,
             ].filter(Boolean);
