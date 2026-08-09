@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublicOrg } from "@/lib/public-data";
-import { LogoMark } from "@/components/logo";
 
 /**
  * Dirender per permintaan, bukan ISR.
@@ -31,40 +29,10 @@ export default async function CareerLayout({
       {/* Garis emas tipis di paling atas — satu-satunya ornamen */}
       <div aria-hidden className="rule-gold h-px" />
 
-      <header className="border-b border-line">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-5">
-          <Link
-            href={`/karier/${org.slug}`}
-            className="flex min-w-0 items-center gap-3"
-          >
-            {/* Logo yang diunggah lewat Pengaturan didahulukan. Kalau belum
-                ada, pakai logo CKB dari aset — bukan bulatan inisial, karena
-                aplikasi ini memang milik satu perusahaan dan logonya ada. */}
-            {org.logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={org.logo_url}
-                alt=""
-                className="size-9 rounded-control object-cover ring-1 ring-line"
-              />
-            ) : (
-              <LogoMark size={34} />
-            )}
-            <span className="truncate text-heading text-ink">{name}</span>
-          </Link>
-
-          {org.website && (
-            <a
-              href={org.website}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="hidden shrink-0 text-small font-medium text-muted transition-colors hover:text-ink sm:block"
-            >
-              Situs perusahaan
-            </a>
-          )}
-        </div>
-      </header>
+      {/* Header sengaja tidak di sini — lihat career-header.tsx.
+         Halaman daftar lowongan memakai poster perusahaan sebagai hero,
+         dan poster itu sudah memuat logo serta nama. Header di layout
+         membuat logo muncul dua kali berturut-turut. */}
 
       <main className="flex-1">{children}</main>
 

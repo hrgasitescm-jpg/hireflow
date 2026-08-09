@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { buttonClass } from "@/components/ui";
+import { CareerHeader } from "../career-header";
 import { getPublicJob, getPublicOrg, getJobQuestions } from "@/lib/public-data";
 import { env } from "@/lib/env";
 import {
@@ -174,7 +175,9 @@ export default async function JobDetailPage({
 
        Teksnya sendiri tetap dibatasi max-w-3xl di dalam — baris deskripsi
        pekerjaan yang selebar 1024px melelahkan dibaca. */
-    <article className="mx-auto max-w-5xl px-6 py-14 sm:py-16">
+    <>
+      <CareerHeader org={org} />
+      <article className="mx-auto max-w-5xl px-6 py-14 sm:py-16">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -254,8 +257,9 @@ export default async function JobDetailPage({
             questions={questions}
           />
         </section>
-      </div>
-    </article>
+        </div>
+      </article>
+    </>
   );
 }
 
