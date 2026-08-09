@@ -2,7 +2,8 @@
 
 import { useActionState } from "react";
 import { updateOrgProfile, type ProfileState } from "./actions";
-import { Alert, Field, Input, Textarea } from "@/components/ui";
+import { Alert, Field, Input } from "@/components/ui";
+import { RichEditor } from "@/components/rich-editor";
 import { SubmitButton } from "@/components/submit-button";
 
 export function OrgProfileForm({
@@ -33,12 +34,11 @@ export function OrgProfileForm({
         htmlFor="about"
         hint="Tampil di bagian atas career page."
       >
-        <Textarea
-          id="about"
+        <RichEditor
           name="about"
-          rows={4}
-          maxLength={2000}
           defaultValue={initial.about}
+          placeholder="Ceritakan singkat tentang perusahaan…"
+          minHeight="9rem"
         />
       </Field>
 

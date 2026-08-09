@@ -205,3 +205,48 @@ h3 {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Isi editor teks kaya
+
+   Tailwind menghapus gaya bawaan daftar dan judul lewat preflight, jadi di
+   dalam editor keduanya tampil sama seperti paragraf biasa. Pengguna menekan
+   tombol Daftar dan tidak melihat apa pun berubah. Gaya di bawah mengembalikan
+   perbedaannya, disamakan dengan tampilan akhirnya di career page.
+   -------------------------------------------------------------------------- */
+.prose-editor > * + * {
+  margin-top: 0.75rem;
+}
+.prose-editor h2 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.014em;
+  margin-top: 1.25rem;
+}
+.prose-editor h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin-top: 1rem;
+}
+.prose-editor ul,
+.prose-editor ol {
+  padding-left: 1.35rem;
+}
+.prose-editor ul {
+  list-style: disc;
+}
+.prose-editor ol {
+  list-style: decimal;
+}
+.prose-editor li {
+  margin-top: 0.35rem;
+}
+.prose-editor li::marker {
+  color: var(--color-gold-500);
+}
+.prose-editor ol li::marker {
+  color: var(--color-muted);
+}
+.prose-editor strong {
+  font-weight: 600;
+}

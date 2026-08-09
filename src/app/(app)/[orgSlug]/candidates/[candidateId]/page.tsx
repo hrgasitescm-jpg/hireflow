@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Mail, Phone, Link2, MapPin } from "lucide-react";
 import { requireMembership } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { RichContent } from "@/components/rich-content";
 import {
   Avatar,
   Badge,
@@ -48,7 +49,9 @@ export default async function CandidateProfilePage({
   const [appsRes, notesRes] = await Promise.all([
     supabase
       .from("applications")
-      .select("id, status, applied_at, job_id, jobs!inner(title), job_stages(name)")
+      .select(
+        "id, status, applied_at, job_id, cover_letter, jobs!inner(title), job_stages(name)",
+      )
       .eq("candidate_id", candidateId)
       .order("applied_at", { ascending: false }),
     supabase
@@ -156,6 +159,18 @@ export default async function CandidateProfilePage({
                           {APPLICATION_STATUS_LABEL[a.status]}
                         </Badge>
                       </Link>
+
+                      {a.cover_letter && (
+                        <div className="mb-3 rounded-control bg-line-soft px-4 py-3 ring-1 ring-inset ring-line">
+                          <p className="mb-1.5 text-label uppercase text-muted">
+                            Surat lamaran
+                          </p>
+                          <RichContent
+                            value={a.cover_letter}
+                            className="text-small leading-relaxed text-ink-soft"
+                          />
+                        </div>
+                      )}
 
                       {answers.length > 0 && (
                         <dl className="mb-3 space-y-3 rounded-control bg-line-soft px-4 py-3 ring-1 ring-inset ring-line">

@@ -120,10 +120,10 @@ memanggil `/api/cron/keepalive` setiap 6 jam untuk mencegahnya.
 
 Isi secret di GitHub → Settings → Secrets and variables → Actions:
 
-| Secret | Nilai |
-|---|---|
-| `APP_URL` | `https://hireflow.<subdomain-anda>.workers.dev` |
-| `CRON_SECRET` | sama dengan yang di `.env.local` |
+| Secret        | Nilai                                           |
+| ------------- | ----------------------------------------------- |
+| `APP_URL`     | `https://hireflow.<subdomain-anda>.workers.dev` |
+| `CRON_SECRET` | sama dengan yang di `.env.local`                |
 
 ---
 

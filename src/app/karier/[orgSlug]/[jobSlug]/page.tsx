@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { buttonClass } from "@/components/ui";
+import { RichContent } from "@/components/rich-content";
+import { parseStoredDoc, plainTextFromDoc } from "@/lib/rich-text";
 import { CareerHeader } from "../career-header";
 import {
   getPublicJob,
@@ -40,53 +42,15 @@ export async function generateMetadata({
   const job = await getPublicJob(org.id, jobSlug);
   if (!job) return { title: "Tidak ditemukan" };
 
-  const description = job.description.slice(0, 160) || `Lowongan di ${org.name}`;
+  const description =
+    plainTextFromDoc(parseStoredDoc(job.description)).slice(0, 160) ||
+    `Lowongan di ${org.name}`;
 
   return {
     title: { absolute: `${job.title} — ${org.name.trim()}` },
     description,
     openGraph: { title: job.title, description, type: "article" },
   };
-}
-
-/** Blok teks sederhana: baris diawali "-" jadi bullet, sisanya paragraf. */
-function RichText({ content }: { content: string }) {
-  const lines = content.split("\n").filter((l) => l.trim());
-  if (lines.length === 0) return null;
-
-  const blocks: React.ReactNode[] = [];
-  let bullets: string[] = [];
-
-  const flush = (key: number) => {
-    if (bullets.length === 0) return;
-    blocks.push(
-      <ul key={`ul-${key}`} className="my-3 space-y-2 pl-5 marker:text-gold-400">
-        {bullets.map((b, i) => (
-          <li key={i} className="list-disc">
-            {b}
-          </li>
-        ))}
-      </ul>,
-    );
-    bullets = [];
-  };
-
-  lines.forEach((line, i) => {
-    const trimmed = line.trim();
-    if (/^[-*•]\s+/.test(trimmed)) {
-      bullets.push(trimmed.replace(/^[-*•]\s+/, ""));
-    } else {
-      flush(i);
-      blocks.push(
-        <p key={`p-${i}`} className="my-3 first:mt-0">
-          {trimmed}
-        </p>,
-      );
-    }
-  });
-  flush(lines.length);
-
-  return <>{blocks}</>;
 }
 
 export default async function JobDetailPage({
@@ -323,7 +287,7 @@ function Prose({ title, content }: { title: string; content: string }) {
     <section>
       <h2 className="text-heading text-ink">{title}</h2>
       <div className="mt-4 text-[1.0625rem] leading-[1.75] text-ink-soft">
-        <RichText content={content} />
+        <RichContent value={content} />
       </div>
     </section>
   );

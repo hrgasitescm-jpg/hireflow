@@ -13,6 +13,7 @@ import {
   buttonClass,
 } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
+import { RichEditor } from "@/components/rich-editor";
 import { slugify } from "@/lib/utils";
 import type { Tables } from "@/lib/database.types";
 
@@ -212,35 +213,31 @@ export function JobForm({
 
         <Field
           label="Deskripsi pekerjaan"
-          htmlFor="description"
           hint="Jelaskan tanggung jawab utama dan konteks tim."
         >
-          <Textarea
-            id="description"
+          <RichEditor
             name="description"
-            rows={7}
             defaultValue={values.description}
             placeholder="Kamu akan bertanggung jawab atas…"
+            minHeight="12rem"
           />
         </Field>
 
-        <Field label="Kualifikasi" htmlFor="requirements">
-          <Textarea
-            id="requirements"
+        <Field label="Kualifikasi">
+          <RichEditor
             name="requirements"
-            rows={6}
             defaultValue={values.requirements}
-            placeholder="- Minimal 3 tahun pengalaman…"
+            placeholder="Minimal 3 tahun pengalaman…"
+            minHeight="10rem"
           />
         </Field>
 
-        <Field label="Benefit" htmlFor="benefits">
-          <Textarea
-            id="benefits"
+        <Field label="Benefit">
+          <RichEditor
             name="benefits"
-            rows={4}
             defaultValue={values.benefits}
-            placeholder="- BPJS Kesehatan & Ketenagakerjaan…"
+            placeholder="BPJS Kesehatan & Ketenagakerjaan…"
+            minHeight="8rem"
           />
         </Field>
 

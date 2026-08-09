@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { getPublicJobs, getPublicOrg } from "@/lib/public-data";
 import { buttonClass } from "@/components/ui";
+import { RichContent } from "@/components/rich-content";
 import {
   EMPLOYMENT_TYPE_LABEL,
   workModeLabel,
@@ -96,9 +97,10 @@ export default async function CareerPage({
       {(org.about || org.website) && (
         <div className="mt-8 flex flex-wrap items-start justify-between gap-6">
           {org.about && (
-            <p className="max-w-2xl text-body leading-relaxed whitespace-pre-wrap text-muted">
-              {org.about}
-            </p>
+            <RichContent
+              value={org.about}
+              className="max-w-2xl text-body leading-relaxed text-muted"
+            />
           )}
           {org.website && (
             <a

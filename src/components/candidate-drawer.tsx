@@ -10,6 +10,7 @@ import {
   Select,
   Textarea,
 } from "@/components/ui";
+import { RichContent } from "@/components/rich-content";
 import { formatDate } from "@/lib/utils";
 import type { BoardApplication, BoardStage } from "@/components/pipeline-board";
 import {
@@ -44,6 +45,7 @@ export function CandidateDrawer({
   const { candidate } = application;
   const [notes, setNotes] = useState<DrawerNote[]>([]);
   const [resumeDocId, setResumeDocId] = useState<string | null>(null);
+  const [coverLetter, setCoverLetter] = useState<string | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(true);
   const [noteBody, setNoteBody] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -62,10 +64,16 @@ export function CandidateDrawer({
 
     fetch(`/api/applications/${application.id}?org=${orgSlug}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error("gagal"))))
-      .then((data: { notes: DrawerNote[]; resumeDocId: string | null }) => {
+      .then(
+        (data: {
+          notes: DrawerNote[];
+          resumeDocId: string | null;
+          coverLetter: string | null;
+        }) => {
         if (cancelled) return;
         setNotes(data.notes);
         setResumeDocId(data.resumeDocId);
+        setCoverLetter(data.coverLetter);
       })
       .catch(() => !cancelled && setError("Gagal memuat detail kandidat."))
       .finally(() => !cancelled && setLoadingDetail(false));
@@ -179,6 +187,23 @@ export function CandidateDrawer({
                 ` · ${candidate.yearsExp} tahun pengalaman`}
             </p>
           </section>
+
+          {/* Surat lamaran. Sebelumnya disimpan tapi tidak pernah
+              ditampilkan di layar mana pun — pelamar menulis untuk kotak yang
+              tidak pernah dibuka. */}
+          {coverLetter && (
+            <section>
+              <h3 className="mb-2 text-label uppercase text-muted">
+                Surat lamaran
+              </h3>
+              <div className="rounded-control bg-line-soft px-4 py-3 ring-1 ring-inset ring-line">
+                <RichContent
+                  value={coverLetter}
+                  className="text-small leading-relaxed text-ink-soft"
+                />
+              </div>
+            </section>
+          )}
 
           {candidate.skills.length > 0 && (
             <section>

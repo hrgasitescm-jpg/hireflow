@@ -13,6 +13,7 @@ import {
   Textarea,
 } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
+import { RichEditor } from "@/components/rich-editor";
 import { MAX_RESUME_BYTES } from "@/lib/validation";
 
 type Question = {
@@ -188,10 +189,13 @@ export function ApplyForm({
 
       <Field
         label="Surat lamaran"
-        htmlFor="coverLetter"
         hint="Ceritakan singkat kenapa kamu cocok untuk posisi ini."
       >
-        <Textarea id="coverLetter" name="coverLetter" rows={5} maxLength={5000} />
+        <RichEditor
+          name="coverLetter"
+          placeholder="Saya tertarik dengan posisi ini karena…"
+          minHeight="9rem"
+        />
       </Field>
 
       {questions.map((q) => (

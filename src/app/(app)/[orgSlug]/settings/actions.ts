@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireMembership, canAdmin } from "@/lib/auth";
+import { sanitizeRichInput } from "@/lib/rich-text";
 
 const profileSchema = z.object({
   name: z.string().trim().min(2, "Nama minimal 2 karakter").max(80),
@@ -28,7 +29,7 @@ export async function updateOrgProfile(
 
   const parsed = profileSchema.safeParse({
     name: formData.get("name"),
-    about: formData.get("about") ?? "",
+    about: sanitizeRichInput(formData.get("about")),
     website: formData.get("website") ?? "",
     brandColor: formData.get("brandColor"),
   });

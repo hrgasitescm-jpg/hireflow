@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireMembership, canManage } from "@/lib/auth";
+import { sanitizeRichInput } from "@/lib/rich-text";
 import { jobSchema } from "@/lib/validation";
 import { slugify } from "@/lib/utils";
 
@@ -30,9 +31,11 @@ function readJobForm(formData: FormData) {
     locationId: formData.get("locationId") ?? "",
     workMode: formData.get("workMode"),
     employmentType: formData.get("employmentType"),
-    description: formData.get("description") ?? "",
-    requirements: formData.get("requirements") ?? "",
-    benefits: formData.get("benefits") ?? "",
+    // Dibersihkan lebih dulu terhadap daftar node yang diizinkan. Siapa pun
+    // bisa mengirim JSON apa saja ke Server Action, bukan hanya lewat editor.
+    description: sanitizeRichInput(formData.get("description")),
+    requirements: sanitizeRichInput(formData.get("requirements")),
+    benefits: sanitizeRichInput(formData.get("benefits")),
     requiredSkills: formData.get("requiredSkills") ?? "",
     minYearsExp: emptyToNull(formData.get("minYearsExp")),
     salaryMin: emptyToNull(formData.get("salaryMin")),

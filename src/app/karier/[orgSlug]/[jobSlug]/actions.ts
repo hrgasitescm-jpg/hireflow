@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { applicationSchema, validateResume } from "@/lib/validation";
 import { driveConfig, uploadResume } from "@/lib/google-drive";
+import { sanitizeRichInput } from "@/lib/rich-text";
 import { toE164 } from "@/lib/utils";
 
 export type ApplyState = {
@@ -91,7 +92,9 @@ export async function submitApplication(
     linkedinUrl: formData.get("linkedinUrl") ?? "",
     portfolioUrl: formData.get("portfolioUrl") ?? "",
     yearsExp: formData.get("yearsExp") || undefined,
-    coverLetter: formData.get("coverLetter") ?? "",
+    // Datang dari internet terbuka, jadi dibersihkan terhadap daftar node
+    // yang diizinkan sebelum menyentuh database.
+    coverLetter: sanitizeRichInput(formData.get("coverLetter")),
     consent: formData.get("consent"),
     website: formData.get("website") ?? "", // honeypot
   });

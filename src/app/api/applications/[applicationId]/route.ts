@@ -32,7 +32,7 @@ export async function GET(
 
   const { data: application } = await supabase
     .from("applications")
-    .select("id, candidate_id, org_id")
+    .select("id, candidate_id, org_id, cover_letter")
     .eq("id", applicationId)
     .maybeSingle();
 
@@ -68,7 +68,11 @@ export async function GET(
   });
 
   return NextResponse.json(
-    { notes, resumeDocId: docRes.data?.id ?? null },
+    {
+      notes,
+      resumeDocId: docRes.data?.id ?? null,
+      coverLetter: application.cover_letter ?? null,
+    },
     { headers: { "Cache-Control": "no-store" } },
   );
 }
