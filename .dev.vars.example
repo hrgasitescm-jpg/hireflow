@@ -18,3 +18,13 @@
 
 SUPABASE_SERVICE_ROLE_KEY=
 CRON_SECRET=
+
+# ------------------------------------------------------------
+# Google Drive untuk penyimpanan CV — opsional.
+# Kalau keempatnya kosong, aplikasi memakai Supabase Storage.
+# Cara mendapatkannya ada di DEPLOY.md.
+# ------------------------------------------------------------
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REFRESH_TOKEN=
+GOOGLE_DRIVE_FOLDER_ID=

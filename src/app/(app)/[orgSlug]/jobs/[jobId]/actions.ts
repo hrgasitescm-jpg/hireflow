@@ -103,21 +103,39 @@ export async function addNote(
 }
 
 /** URL bertanda tangan untuk mengunduh CV. Kedaluwarsa 5 menit. */
+/**
+ * Menghasilkan tautan unduhan CV.
+ *
+ * Menerima ID dokumen, bukan path penyimpanan. Sebelumnya path dikirim dari
+ * klien dan dijaga dengan memeriksa awalannya — cara itu masih bekerja untuk
+ * Supabase yang path-nya memuat ID organisasi, tapi berkas Drive hanya punya
+ * ID acak tanpa jejak kepemilikan. Mencari barisnya berdasarkan ID sambil
+ * memfilter org_id membuat penjagaannya sama untuk kedua tempat penyimpanan.
+ */
 export async function getResumeUrl(
   orgSlug: string,
-  storagePath: string,
+  documentId: string,
 ): Promise<{ url?: string; error?: string }> {
   const membership = await requireMembership(orgSlug);
 
-  // Cegah path traversal ke folder organisasi lain.
-  if (!storagePath.startsWith(`${membership.org.id}/`)) {
-    return { error: "Berkas tidak ditemukan." };
+  const supabase = await createClient();
+  const { data: doc } = await supabase
+    .from("candidate_documents")
+    .select("storage_path")
+    .eq("id", documentId)
+    .eq("org_id", membership.org.id)
+    .maybeSingle();
+
+  if (!doc) return { error: "Berkas tidak ditemukan." };
+
+  /* Berkas Drive disalurkan lewat Worker; tidak ada padanan signed URL. */
+  if (doc.storage_path.startsWith("gdrive:")) {
+    return { url: `/api/resume/${documentId}` };
   }
 
-  const supabase = await createClient();
   const { data, error } = await supabase.storage
     .from("resumes")
-    .createSignedUrl(storagePath, 300);
+    .createSignedUrl(doc.storage_path, 300);
 
   if (error || !data) return { error: "Gagal membuat tautan unduhan." };
   return { url: data.signedUrl };

@@ -49,7 +49,7 @@ export async function GET(
       .limit(50),
     supabase
       .from("candidate_documents")
-      .select("storage_path")
+      .select("id")
       .eq("candidate_id", application.candidate_id)
       .eq("kind", "resume")
       .order("created_at", { ascending: false })
@@ -68,7 +68,7 @@ export async function GET(
   });
 
   return NextResponse.json(
-    { notes, resumePath: docRes.data?.storage_path ?? null },
+    { notes, resumeDocId: docRes.data?.id ?? null },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

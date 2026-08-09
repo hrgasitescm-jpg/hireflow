@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { applicationSchema, validateResume } from "@/lib/validation";
+import { driveConfig, uploadResume } from "@/lib/google-drive";
 import { toE164 } from "@/lib/utils";
 
 export type ApplyState = {
@@ -117,7 +118,7 @@ export async function submitApplication(
 
   const { data: job } = await supabase
     .from("jobs")
-    .select("id, org_id, status")
+    .select("id, org_id, status, title")
     .eq("org_id", org.id)
     .eq("slug", jobSlug)
     .eq("status", "published")
@@ -195,18 +196,52 @@ export async function submitApplication(
   }
 
   // ---------- 6. Simpan CV ----------
+  /**
+   * Google Drive adalah tempat utama supaya tim HR bisa menelusuri CV
+   * langsung dari Drive tanpa membuka aplikasi.
+   *
+   * Supabase Storage tetap jadi jaring pengaman. Kalau token Google dicabut
+   * atau Drive sedang bermasalah, lamaran TIDAK dibatalkan — CV-nya jatuh ke
+   * Supabase dan lamaran tetap masuk. Kehilangan seorang pelamar jauh lebih
+   * mahal daripada satu CV yang telat sampai ke Drive.
+   *
+   * Kolom storage_path menampung keduanya, dibedakan lewat awalan `gdrive:`.
+   * Itu menghindari perubahan skema dan membuat berkas lama tetap terbaca.
+   */
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "pdf";
-  const storagePath = `${org.id}/${candidateId}/${crypto.randomUUID()}.${ext}`;
+  let storagePath: string | null = null;
+  let supabasePath: string | null = null;
 
-  const { error: uploadError } = await supabase.storage
-    .from("resumes")
-    .upload(storagePath, file, {
-      contentType: file.type,
-      upsert: false,
-    });
+  const drive = driveConfig();
+  if (drive) {
+    try {
+      const uploaded = await uploadResume(drive, {
+        file,
+        candidateName: v.fullName,
+        jobTitle: job.title,
+      });
+      storagePath = `gdrive:${uploaded.fileId}`;
+    } catch (err) {
+      console.error(
+        "Unggah ke Google Drive gagal, jatuh ke Supabase Storage:",
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
 
-  if (uploadError) {
-    return { error: "Gagal mengunggah CV. Pastikan ukuran di bawah 5 MB." };
+  if (!storagePath) {
+    supabasePath = `${org.id}/${candidateId}/${crypto.randomUUID()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("resumes")
+      .upload(supabasePath, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      return { error: "Gagal mengunggah CV. Pastikan ukuran di bawah 5 MB." };
+    }
+    storagePath = supabasePath;
   }
 
   await supabase.from("candidate_documents").insert({
@@ -243,8 +278,12 @@ export async function submitApplication(
     .single();
 
   if (applicationError || !application) {
-    // CV sudah terunggah tapi lamaran gagal — bersihkan supaya tidak jadi sampah.
-    await supabase.storage.from("resumes").remove([storagePath]);
+    /* CV sudah terunggah tapi lamaran gagal. Yang di Supabase dibersihkan;
+       yang di Drive dibiarkan karena menghapus berkas orang lain lebih
+       berbahaya daripada menyisakan satu berkas yatim yang terlihat HR. */
+    if (supabasePath) {
+      await supabase.storage.from("resumes").remove([supabasePath]);
+    }
     return { error: "Gagal mengirim lamaran. Coba lagi sebentar lagi." };
   }
 

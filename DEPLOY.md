@@ -127,6 +127,106 @@ Isi secret di GitHub → Settings → Secrets and variables → Actions:
 
 ---
 
+## Google Drive untuk penyimpanan CV (opsional)
+
+Kalau keempat variabel di bawah tidak diisi, aplikasi memakai Supabase
+Storage seperti biasa. Integrasi ini murni tambahan — tidak ada yang rusak
+kalau dilewati.
+
+### Kenapa OAuth, bukan service account
+
+Service account **tidak punya kuota penyimpanan Drive sama sekali** dan tidak
+bisa memiliki berkas. Alternatif resminya adalah Shared Drive, dan itu hanya
+tersedia di Google Workspace berbayar. Untuk akun Gmail biasa, satu-satunya
+jalan adalah OAuth atas nama akun manusia.
+
+### 1. Siapkan proyek Google Cloud
+
+1. Buka [console.cloud.google.com](https://console.cloud.google.com) → buat proyek baru
+2. **APIs & Services → Library** → cari **Google Drive API** → **Enable**
+3. **APIs & Services → OAuth consent screen**
+   - User type: **External**
+   - Isi nama aplikasi dan email dukungan
+   - Scope: tambahkan `https://www.googleapis.com/auth/drive.file`
+   - **Tekan Publish app** sampai statusnya **In production**
+
+Langkah terakhir itu tidak boleh dilewat. Selama statusnya masih **Testing**,
+Google mencabut refresh token setelah **7 hari** — unggahan CV akan mati tiap
+minggu sampai Anda login ulang manual.
+
+`drive.file` adalah scope tersempit: aplikasi hanya bisa menyentuh berkas yang
+dibuatnya sendiri, tidak bisa membaca isi Drive Anda yang lain.
+
+### 2. Buat OAuth client
+
+**APIs & Services → Credentials → Create credentials → OAuth client ID**
+
+- Application type: **Web application**
+- Authorized redirect URI: `http://localhost:8977/callback`
+
+URI itu hanya dipakai sekali saat mengambil refresh token di komputer Anda.
+Aplikasi yang berjalan di Cloudflare tidak pernah memakainya.
+
+Catat **Client ID** dan **Client secret**.
+
+### 3. Siapkan folder Drive
+
+Buat folder di Google Drive, misalnya "Lamaran Kerja". Bagikan ke tim HR
+seperti folder biasa — inilah yang membuat mereka bisa menelusuri CV tanpa
+membuka aplikasi.
+
+Ambil ID folder dari bilah alamat:
+
+```
+https://drive.google.com/drive/folders/1A2B3C4D5E6F7G8H9I
+                                        └─────── ini ID-nya ───────┘
+```
+
+### 4. Ambil refresh token
+
+```bash
+node scripts/google-refresh-token.mjs <CLIENT_ID> <CLIENT_SECRET>
+```
+
+Skrip membuka server lokal, mencetak tautan otorisasi, dan setelah Anda
+menyetujui akan mencetak refresh token di terminal.
+
+### 5. Pasang sebagai secret Worker
+
+```bash
+npx wrangler secret put GOOGLE_CLIENT_ID
+npx wrangler secret put GOOGLE_CLIENT_SECRET
+npx wrangler secret put GOOGLE_REFRESH_TOKEN
+npx wrangler secret put GOOGLE_DRIVE_FOLDER_ID
+```
+
+Keempatnya secret **runtime** — tidak dibutuhkan saat build.
+
+### Cara kerjanya setelah aktif
+
+```
+Pelamar kirim lamaran
+   │
+   ├─ berhasil ─> Google Drive
+   │               folder "Lamaran Kerja / {Judul Lowongan}"
+   │               berkas "{Nama Pelamar}.pdf"
+   │
+   └─ gagal ────> Supabase Storage (jaring pengaman)
+                   lamaran TETAP tersimpan
+```
+
+Kegagalan Drive tidak pernah membatalkan lamaran. Penyebabnya dicatat di log
+Worker, CV-nya jatuh ke Supabase, dan pelamar tidak melihat error apa pun.
+Kehilangan seorang pelamar lebih mahal daripada satu CV yang telat masuk
+Drive.
+
+Recruiter tetap mengunduh lewat tombol yang sama di aplikasi. Berkas Drive
+disalurkan melalui Worker (`/api/resume/{id}`) karena Drive tidak punya
+padanan signed URL berumur pendek — kendali aksesnya tetap milik aplikasi,
+bukan tautan Drive yang bisa diteruskan siapa saja.
+
+---
+
 ## Pratinjau lokal sebelum deploy
 
 Menjalankan Worker yang sudah dibangun di runtime `workerd` asli, bukan

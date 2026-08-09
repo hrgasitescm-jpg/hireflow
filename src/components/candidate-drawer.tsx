@@ -43,7 +43,7 @@ export function CandidateDrawer({
 }) {
   const { candidate } = application;
   const [notes, setNotes] = useState<DrawerNote[]>([]);
-  const [resumePath, setResumePath] = useState<string | null>(null);
+  const [resumeDocId, setResumeDocId] = useState<string | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(true);
   const [noteBody, setNoteBody] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -62,10 +62,10 @@ export function CandidateDrawer({
 
     fetch(`/api/applications/${application.id}?org=${orgSlug}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error("gagal"))))
-      .then((data: { notes: DrawerNote[]; resumePath: string | null }) => {
+      .then((data: { notes: DrawerNote[]; resumeDocId: string | null }) => {
         if (cancelled) return;
         setNotes(data.notes);
-        setResumePath(data.resumePath);
+        setResumeDocId(data.resumeDocId);
       })
       .catch(() => !cancelled && setError("Gagal memuat detail kandidat."))
       .finally(() => !cancelled && setLoadingDetail(false));
@@ -76,8 +76,8 @@ export function CandidateDrawer({
   }, [application.id, orgSlug]);
 
   async function handleDownload() {
-    if (!resumePath) return;
-    const { url, error: e } = await getResumeUrl(orgSlug, resumePath);
+    if (!resumeDocId) return;
+    const { url, error: e } = await getResumeUrl(orgSlug, resumeDocId);
     if (url) window.open(url, "_blank", "noopener");
     else setError(e ?? "Gagal membuka CV.");
   }
@@ -218,14 +218,14 @@ export function CandidateDrawer({
                 variant="secondary"
                 size="sm"
                 onClick={handleDownload}
-                disabled={!resumePath || loadingDetail}
+                disabled={!resumeDocId || loadingDetail}
               >
                 {loadingDetail ? (
                   <Loader2 className="size-4 animate-spin" aria-hidden />
                 ) : (
                   <Download className="size-4" aria-hidden />
                 )}
-                {resumePath ? "Unduh CV" : "Tidak ada CV"}
+                {resumeDocId ? "Unduh CV" : "Tidak ada CV"}
               </Button>
 
               {!readOnly && (
