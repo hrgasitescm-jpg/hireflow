@@ -331,6 +331,30 @@ export type Database = {
           },
         ];
       };
+      whatsapp_templates: {
+        Row: {
+          id: string;
+          org_id: string;
+          stage_name: string;
+          body: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          org_id: string;
+          stage_name: string;
+          body?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          org_id?: string;
+          stage_name?: string;
+          body?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       work_modes: {
         Row: {
           id: string;

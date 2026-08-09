@@ -11,6 +11,7 @@ import { OrgProfileForm } from "./org-profile-form";
 import { CareerPageLink } from "./career-page-link";
 import { TermManager } from "./term-manager";
 import { MemberManager } from "./member-manager";
+import { WhatsappManager } from "./whatsapp-manager";
 
 export const metadata: Metadata = { title: "Pengaturan" };
 
@@ -24,8 +25,14 @@ export default async function SettingsPage({
   const user = await requireUser();
   const supabase = await createClient();
 
-  const [orgRes, membersRes, departmentsRes, locationsRes, workModesRes] =
-    await Promise.all([
+  const [
+    orgRes,
+    membersRes,
+    departmentsRes,
+    locationsRes,
+    workModesRes,
+    waRes,
+  ] = await Promise.all([
     supabase
       .from("organizations")
       .select("id, name, slug, about, website, brand_color")
@@ -51,6 +58,11 @@ export default async function SettingsPage({
       .select("id, name, is_remote")
       .eq("org_id", membership.org.id)
       .order("position"),
+    supabase
+      .from("whatsapp_templates")
+      .select("id, stage_name, body")
+      .eq("org_id", membership.org.id)
+      .order("created_at"),
   ]);
 
   const org = orgRes.data;
@@ -162,6 +174,26 @@ export default async function SettingsPage({
             />
           </Card>
         </div>
+
+        {/* ----------------------------------------------------------------
+            Template WhatsApp
+
+            Aplikasi tidak mengirim pesan apa pun. Tombol di kartu kandidat
+            membuka WhatsApp recruiter dengan pesan sudah terisi sesuai tahap;
+            yang menekan kirim tetap manusia.
+            ---------------------------------------------------------------- */}
+        <Card className="p-5">
+          <h2 className="mb-1 text-heading text-ink">Template WhatsApp</h2>
+          <p className="mb-4 text-small text-muted">
+            Pesan yang terisi otomatis saat menekan tombol WhatsApp di kartu
+            kandidat. Dicocokkan dengan nama tahap tempat kandidat berada.
+          </p>
+          <WhatsappManager
+            orgSlug={orgSlug}
+            templates={waRes.data ?? []}
+            canEdit={isManager}
+          />
+        </Card>
 
         <Card className="p-5">
           <div className="mb-4 flex items-center justify-between">

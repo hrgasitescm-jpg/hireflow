@@ -1,9 +1,18 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { X, Mail, Download, Check, Ban, Loader2 } from "lucide-react";
+import {
+  X,
+  Mail,
+  Download,
+  Check,
+  Ban,
+  Loader2,
+  MessageCircle,
+} from "lucide-react";
 import {
   Alert,
+  buttonClass,
   Avatar,
   Badge,
   Button,
@@ -46,6 +55,10 @@ export function CandidateDrawer({
   const [notes, setNotes] = useState<DrawerNote[]>([]);
   const [resumeDocId, setResumeDocId] = useState<string | null>(null);
   const [coverLetter, setCoverLetter] = useState<string | null>(null);
+  const [whatsapp, setWhatsapp] = useState<{
+    link: string;
+    stageName: string;
+  } | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(true);
   const [noteBody, setNoteBody] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -69,11 +82,13 @@ export function CandidateDrawer({
           notes: DrawerNote[];
           resumeDocId: string | null;
           coverLetter: string | null;
+          whatsapp: { link: string; stageName: string } | null;
         }) => {
         if (cancelled) return;
         setNotes(data.notes);
         setResumeDocId(data.resumeDocId);
         setCoverLetter(data.coverLetter);
+        setWhatsapp(data.whatsapp);
       })
       .catch(() => !cancelled && setError("Gagal memuat detail kandidat."))
       .finally(() => !cancelled && setLoadingDetail(false));
@@ -239,6 +254,22 @@ export function CandidateDrawer({
             )}
 
             <div className="flex flex-wrap gap-2">
+              {/* Aplikasi tidak mengirim apa pun — tautan ini membuka WhatsApp
+                  recruiter dengan pesan sudah terisi sesuai tahap kandidat.
+                  Yang menekan kirim tetap manusia. */}
+              {whatsapp && (
+                <a
+                  href={whatsapp.link}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className={buttonClass({ variant: "gold", size: "sm" })}
+                  title={`Pesan untuk tahap ${whatsapp.stageName}`}
+                >
+                  <MessageCircle className="size-4" aria-hidden />
+                  WhatsApp
+                </a>
+              )}
+
               <Button
                 variant="secondary"
                 size="sm"
