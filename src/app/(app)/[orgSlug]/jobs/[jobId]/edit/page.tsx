@@ -45,7 +45,9 @@ export default async function EditJobPage({
       .order("position"),
     supabase
       .from("job_questions")
-      .select("id, label, help_text, type, required, position")
+      .select(
+        "id, label, help_text, type, required, is_knockout, knockout_rule, position",
+      )
       .eq("job_id", jobId)
       .order("position"),
   ]);

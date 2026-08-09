@@ -17,6 +17,7 @@ import {
   Input,
   Select,
 } from "@/components/ui";
+import { KNOCKOUT_OP_LABEL, parseKnockoutRule } from "@/lib/knockout";
 import { SubmitButton } from "@/components/submit-button";
 
 export type ManagedQuestion = {
@@ -25,6 +26,8 @@ export type ManagedQuestion = {
   help_text: string | null;
   type: string;
   required: boolean;
+  is_knockout: boolean;
+  knockout_rule: unknown;
   answerCount: number;
 };
 
@@ -38,6 +41,7 @@ export function QuestionManager({
   questions: ManagedQuestion[];
 }) {
   const [adding, setAdding] = useState(false);
+  const [knockout, setKnockout] = useState(false);
   const addFormRef = useRef<HTMLFormElement>(null);
 
   const [addState, addAction] = useActionState(
@@ -53,6 +57,7 @@ export function QuestionManager({
     if (addState.success) {
       addFormRef.current?.reset();
       setAdding(false);
+      setKnockout(false);
     }
   }, [addState.success]);
 
@@ -77,6 +82,14 @@ export function QuestionManager({
                     ] ?? q.type}
                   </Badge>
                   {q.required && <Badge tone="gold">Wajib</Badge>}
+                  {q.is_knockout && (() => {
+                    const rule = parseKnockoutRule(q.knockout_rule);
+                    return rule ? (
+                      <Badge tone="red">
+                        Gugur jika {KNOCKOUT_OP_LABEL[rule.op]} {String(rule.value)}
+                      </Badge>
+                    ) : null;
+                  })()}
                   {q.answerCount > 0 && (
                     <span className="tabular text-caption text-muted">
                       {q.answerCount} jawaban masuk
@@ -153,6 +166,59 @@ export function QuestionManager({
               <Checkbox name="required" />
               Wajib diisi
             </label>
+          </div>
+
+          {/* ------------------------------------------------------------
+              Aturan penggugur
+
+              Sengaja satu operator dan satu nilai. Aturan bergabung — "gugur
+              jika A kurang dari 3 DAN B tidak sama dengan ya" — sulit
+              dijelaskan di layar dan lebih sulit lagi dipertanggungjawabkan
+              ketika pelamar bertanya kenapa ia gugur.
+              ------------------------------------------------------------ */}
+          <div className="rounded-control bg-surface p-4 ring-1 ring-inset ring-line">
+            <label className="flex items-start gap-2.5 text-small text-ink-soft">
+              <Checkbox
+                name="isKnockout"
+                className="mt-0.5"
+                checked={knockout}
+                onChange={(e) => setKnockout(e.target.checked)}
+              />
+              <span>
+                Gugurkan pelamar otomatis
+                <span className="mt-0.5 block text-caption text-muted">
+                  Lamaran langsung masuk status ditolak tanpa menunggu ditinjau.
+                  Pelamar tidak diberi tahu alasannya.
+                </span>
+              </span>
+            </label>
+
+            {knockout && (
+              <div className="mt-4 flex flex-wrap items-end gap-3">
+                <Field label="Gugurkan jika jawabannya" htmlFor="knockoutOp">
+                  <Select
+                    id="knockoutOp"
+                    name="knockoutOp"
+                    defaultValue="lt"
+                    className="w-48"
+                  >
+                    {Object.entries(KNOCKOUT_OP_LABEL).map(([op, label]) => (
+                      <option key={op} value={op}>
+                        {label}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Nilai pembanding" htmlFor="knockoutValue">
+                  <Input
+                    id="knockoutValue"
+                    name="knockoutValue"
+                    className="w-40"
+                    placeholder="3"
+                  />
+                </Field>
+              </div>
+            )}
           </div>
 
           {addState.error && <Alert>{addState.error}</Alert>}

@@ -15,7 +15,8 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { Alert, Avatar } from "@/components/ui";
+import { Search, X } from "lucide-react";
+import { Alert, Avatar, Button, Input } from "@/components/ui";
 import { cn, timeAgo } from "@/lib/utils";
 import { moveApplicationStage } from "@/app/(app)/[orgSlug]/jobs/[jobId]/actions";
 import { CandidateDrawer } from "@/components/candidate-drawer";
@@ -66,6 +67,9 @@ export function PipelineBoard({
   readOnly?: boolean;
 }) {
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [minYears, setMinYears] = useState("");
+  const [agingOnly, setAgingOnly] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [openApp, setOpenApp] = useState<BoardApplication | null>(null);
   const [, startTransition] = useTransition();
@@ -106,6 +110,38 @@ export function PipelineBoard({
     });
   }
 
+  /* ------------------------------------------------------------------
+     Penyaringan dilakukan di klien.
+
+     Seluruh lamaran aktif memang sudah dimuat untuk menggambar papan, jadi
+     menyaring di sini tidak menambah satu pun permintaan ke server dan hasilnya
+     muncul seketika saat mengetik. Kalau nanti satu lowongan punya ribuan
+     pelamar, penyaringan perlu pindah ke server — tapi menambahkannya sekarang
+     berarti memperlambat papan demi masalah yang belum ada.
+     ------------------------------------------------------------------ */
+  const term = query.trim().toLowerCase();
+  const minYearsNum = minYears ? Number(minYears) : null;
+
+  const filtered = items.filter((a) => {
+    if (term) {
+      const haystack = [
+        a.candidate.fullName,
+        a.candidate.email,
+        a.candidate.headline ?? "",
+        a.candidate.skills.join(" "),
+      ]
+        .join(" ")
+        .toLowerCase();
+      if (!haystack.includes(term)) return false;
+    }
+    if (minYearsNum != null && !Number.isNaN(minYearsNum)) {
+      if ((a.candidate.yearsExp ?? 0) < minYearsNum) return false;
+    }
+    if (agingOnly && daysInStage(a.stageEnteredAt) <= AGING_DAYS) return false;
+    return true;
+  });
+
+  const hasFilter = Boolean(term || minYears || agingOnly);
   const active = activeId ? items.find((a) => a.id === activeId) : null;
 
   if (stages.length === 0) {
@@ -124,6 +160,68 @@ export function PipelineBoard({
         </div>
       )}
 
+      {/* Baris penyaring. Muncul selalu, bukan hanya saat pelamar banyak —
+          kolom yang tiba-tiba muncul setelah jumlah tertentu membuat orang
+          mengira antarmukanya berubah sendiri. */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="relative min-w-0 flex-1 sm:max-w-xs">
+          <Search
+            className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-subtle"
+            aria-hidden
+          />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Cari nama, email, atau skill…"
+            aria-label="Cari kandidat di papan"
+            className="h-9 pl-10 text-small"
+          />
+        </div>
+
+        <Input
+          type="number"
+          min={0}
+          max={60}
+          value={minYears}
+          onChange={(e) => setMinYears(e.target.value)}
+          placeholder="Min. tahun"
+          aria-label="Pengalaman minimal dalam tahun"
+          className="h-9 w-32 text-small"
+        />
+
+        <Button
+          type="button"
+          size="sm"
+          variant={agingOnly ? "primary" : "secondary"}
+          onClick={() => setAgingOnly((v) => !v)}
+          aria-pressed={agingOnly}
+          title={`Kandidat yang diam lebih dari ${AGING_DAYS} hari di tahapnya`}
+        >
+          Mengendap
+        </Button>
+
+        {hasFilter && (
+          <>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setQuery("");
+                setMinYears("");
+                setAgingOnly(false);
+              }}
+            >
+              <X className="size-3.5" aria-hidden />
+              Bersihkan
+            </Button>
+            <span className="tabular text-caption text-muted">
+              {filtered.length} dari {items.length}
+            </span>
+          </>
+        )}
+      </div>
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -135,7 +233,8 @@ export function PipelineBoard({
             <StageColumn
               key={stage.id}
               stage={stage}
-              applications={items.filter((a) => a.stageId === stage.id)}
+              applications={filtered.filter((a) => a.stageId === stage.id)}
+              filtered={hasFilter}
               readOnly={readOnly}
               onOpen={setOpenApp}
             />
@@ -166,11 +265,14 @@ function StageColumn({
   applications,
   readOnly,
   onOpen,
+  filtered = false,
 }: {
   stage: BoardStage;
   applications: BoardApplication[];
   readOnly: boolean;
   onOpen: (a: BoardApplication) => void;
+  /** Kolom kosong berarti berbeda saat penyaring aktif. */
+  filtered?: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
 
@@ -208,7 +310,11 @@ function StageColumn({
                 : "border-line-strong text-subtle",
             )}
           >
-            {isOver ? "Lepas di sini" : "Kosong"}
+            {isOver
+              ? "Lepas di sini"
+              : filtered
+                ? "Tidak ada yang cocok"
+                : "Kosong"}
           </p>
         ) : (
           applications.map((a) => (

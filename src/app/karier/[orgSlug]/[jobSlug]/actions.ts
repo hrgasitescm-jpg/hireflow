@@ -6,6 +6,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { applicationSchema, validateResume } from "@/lib/validation";
 import { driveConfig, uploadResume } from "@/lib/google-drive";
 import { sanitizeRichInput } from "@/lib/rich-text";
+import {
+  isKnockedOut,
+  knockoutReason,
+  parseKnockoutRule,
+} from "@/lib/knockout";
 import { toE164 } from "@/lib/utils";
 
 export type ApplyState = {
@@ -302,7 +307,7 @@ export async function submitApplication(
    */
   const { data: questions } = await supabase
     .from("job_questions")
-    .select("id, type, required, label")
+    .select("id, type, required, label, is_knockout, knockout_rule")
     .eq("job_id", job.id);
 
   const answers = (questions ?? [])
@@ -342,11 +347,51 @@ export async function submitApplication(
     }
   }
 
+  // ---------- 9. Evaluasi pertanyaan penggugur ----------
+  /**
+   * Dijalankan setelah lamaran dan jawaban tersimpan, bukan sebelumnya.
+   *
+   * Pelamar yang gugur tetap tercatat lengkap beserta CV dan jawabannya. Kalau
+   * penggugurannya dilakukan lebih dulu dan lamarannya tidak jadi disimpan,
+   * recruiter kehilangan jejak siapa saja yang pernah melamar — dan aturan
+   * penggugur yang ternyata terlalu ketat tidak akan pernah ketahuan.
+   *
+   * Pelamar tidak diberi tahu. Ini praktik lazim, dan memberitahunya di layar
+   * yang sama dengan "lamaran terkirim" akan terasa mempermainkan.
+   */
+  const gugur = (questions ?? [])
+    .filter((q) => q.is_knockout)
+    .map((q) => {
+      const rule = parseKnockoutRule(q.knockout_rule);
+      if (!rule) return null;
+      const raw = formData.get(`q_${q.id}`);
+      const jawaban = typeof raw === "string" ? raw.trim() : "";
+      return isKnockedOut(jawaban, rule)
+        ? knockoutReason(q.label, rule)
+        : null;
+    })
+    .find((r) => r !== null);
+
+  if (gugur) {
+    const { error: koError } = await supabase
+      .from("applications")
+      .update({
+        status: "rejected",
+        rejection_reason: gugur,
+        rejected_at: new Date().toISOString(),
+      })
+      .eq("id", application.id);
+
+    if (koError) {
+      console.error("Gagal menandai lamaran gugur:", koError.message);
+    }
+  }
+
   await supabase.from("activities").insert({
     org_id: org.id,
     entity_type: "application",
     entity_id: application.id,
-    action: "applied",
+    action: gugur ? "knocked_out" : "applied",
     metadata: { source: "career_page", answers: answers.length },
   });
 

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireMembership, canManage } from "@/lib/auth";
+import { KNOCKOUT_OPS } from "@/lib/knockout";
 
 /**
  * Pertanyaan screening per lowongan.
@@ -25,6 +26,9 @@ export const QUESTION_TYPE_LABEL: Record<CreatableType, string> = {
 };
 
 const questionSchema = z.object({
+  isKnockout: z.boolean().default(false),
+  knockoutOp: z.enum(KNOCKOUT_OPS).optional(),
+  knockoutValue: z.string().trim().max(60).optional(),
   label: z
     .string()
     .trim()
@@ -75,6 +79,9 @@ export async function addQuestion(
     helpText: formData.get("helpText") ?? "",
     type: formData.get("type"),
     required: formData.get("required") === "on",
+    isKnockout: formData.get("isKnockout") === "on",
+    knockoutOp: formData.get("knockoutOp") || undefined,
+    knockoutValue: formData.get("knockoutValue") || undefined,
   });
 
   if (!parsed.success) {
@@ -89,12 +96,29 @@ export async function addQuestion(
     .limit(1)
     .maybeSingle();
 
+  /* Aturan hanya disimpan kalau penggugur dicentang DAN nilainya diisi.
+     Menyimpan is_knockout tanpa aturan akan menghasilkan pertanyaan yang
+     ditandai penggugur tapi tidak pernah menggugurkan siapa pun — jenis
+     kejanggalan yang sulit ditelusuri kemudian. */
+  const punyaAturan =
+    parsed.data.isKnockout &&
+    parsed.data.knockoutOp &&
+    parsed.data.knockoutValue;
+
+  if (parsed.data.isKnockout && !punyaAturan) {
+    return { error: "Isi syarat penggugurnya, atau lepas centang penggugur." };
+  }
+
   const { error } = await g.supabase.from("job_questions").insert({
     job_id: jobId,
     label: parsed.data.label,
     help_text: parsed.data.helpText || null,
     type: parsed.data.type,
     required: parsed.data.required,
+    is_knockout: Boolean(punyaAturan),
+    knockout_rule: punyaAturan
+      ? { op: parsed.data.knockoutOp, value: parsed.data.knockoutValue }
+      : null,
     position: (last?.position ?? 0) + 1,
   });
 
