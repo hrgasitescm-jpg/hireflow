@@ -175,27 +175,40 @@ function StageColumn({
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
 
   return (
+    /* Kolom berlatar abu, kartu berlatar putih. Versi lama menaruh kartu putih
+       di atas kolom putih, sehingga kartunya tidak terbaca sebagai benda yang
+       bisa dipindahkan — padahal seluruh gunanya layar ini adalah memindahkan
+       benda. */
     <section
       ref={setNodeRef}
       aria-label={`Tahap ${stage.name}`}
       className={cn(
-        "flex w-[17.5rem] shrink-0 flex-col rounded-surface border bg-white transition-colors",
-        isOver ? "border-gold-400 bg-gold-50/40" : "border-line",
+        "flex w-[18.5rem] shrink-0 flex-col rounded-surface border transition-colors",
+        isOver
+          ? "border-gold-400 bg-gold-50"
+          : "border-line bg-line-soft",
       )}
     >
-      <header className="flex items-center justify-between border-b border-line px-3.5 py-3">
-        <h2 className="text-[12px] font-semibold uppercase tracking-[0.07em] text-ink-soft">
+      <header className="flex items-center justify-between gap-2 px-4 py-3.5">
+        <h2 className="truncate text-small font-semibold text-ink">
           {stage.name}
         </h2>
-        <span className="tabular rounded-full bg-line-soft px-1.5 py-0.5 text-[11px] font-medium text-muted">
+        <span className="tabular shrink-0 rounded-full bg-surface px-2 py-0.5 text-caption font-semibold text-ink-soft ring-1 ring-inset ring-line">
           {applications.length}
         </span>
       </header>
 
-      <div className="thin-scrollbar flex max-h-[calc(100vh-15rem)] flex-1 flex-col gap-2 overflow-y-auto p-2.5">
+      <div className="thin-scrollbar flex max-h-[calc(100vh-15rem)] flex-1 flex-col gap-2 overflow-y-auto px-2.5 pb-2.5">
         {applications.length === 0 ? (
-          <p className="py-8 text-center text-xs text-stone-400">
-            Kosong
+          <p
+            className={cn(
+              "rounded-control border border-dashed py-10 text-center text-caption transition-colors",
+              isOver
+                ? "border-gold-400 text-gold-700"
+                : "border-line-strong text-subtle",
+            )}
+          >
+            {isOver ? "Lepas di sini" : "Kosong"}
           </p>
         ) : (
           applications.map((a) => (
@@ -254,19 +267,20 @@ function CandidateCard({
     <article
       onClick={() => onOpen?.(application)}
       className={cn(
-        "cursor-pointer rounded-control border border-line bg-white p-3",
-        "transition-colors hover:border-stone-300",
-        dragging && "rotate-1 border-gold-300 shadow-lg shadow-stone-900/10",
+        "cursor-pointer rounded-control border border-line bg-surface p-3.5 shadow-xs",
+        "transition-[box-shadow,border-color]",
+        "hover:border-line-strong hover:shadow-sm",
+        dragging && "rotate-2 border-gold-400 shadow-lg",
       )}
     >
       <div className="flex items-start gap-2.5">
         <Avatar name={candidate.fullName} size="sm" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13.5px] font-medium leading-tight text-ink">
+          <p className="truncate text-small font-semibold leading-tight text-ink">
             {candidate.fullName}
           </p>
           {candidate.headline && (
-            <p className="mt-0.5 truncate text-[11.5px] text-muted">
+            <p className="mt-1 truncate text-caption text-muted">
               {candidate.headline}
             </p>
           )}
@@ -274,11 +288,12 @@ function CandidateCard({
         {application.aiScore != null && (
           <span
             className={cn(
-              "tabular rounded px-1.5 py-0.5 text-[11px] font-semibold",
+              "tabular shrink-0 rounded-[5px] px-1.5 py-0.5 text-caption font-bold ring-1 ring-inset",
               application.aiScore >= 70
-                ? "bg-gold-100 text-gold-800"
-                : "bg-line-soft text-muted",
+                ? "bg-gold-100 text-gold-800 ring-gold-200"
+                : "bg-line-soft text-muted ring-line",
             )}
+            title={`Skor kecocokan ${application.aiScore} dari 100`}
           >
             {application.aiScore}
           </span>
@@ -286,27 +301,31 @@ function CandidateCard({
       </div>
 
       {candidate.skills.length > 0 && (
-        <div className="mt-2.5 flex flex-wrap gap-1">
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {candidate.skills.slice(0, 3).map((s) => (
             <span
               key={s}
-              className="rounded bg-line-soft px-1.5 py-0.5 text-[10.5px] text-ink-soft"
+              className="rounded-[5px] bg-line-soft px-1.5 py-0.5 text-caption text-ink-soft ring-1 ring-inset ring-line"
             >
               {s}
             </span>
           ))}
           {candidate.skills.length > 3 && (
-            <span className="px-1 py-0.5 text-[10.5px] text-stone-400">
+            <span className="px-1 py-0.5 text-caption text-subtle">
               +{candidate.skills.length - 3}
             </span>
           )}
         </div>
       )}
 
-      <div className="mt-2.5 flex items-center justify-between text-[11px] text-stone-400">
-        <span>{timeAgo(application.appliedAt)}</span>
+      <div className="mt-3 flex items-center justify-between gap-2 text-caption">
+        <span className="text-subtle">{timeAgo(application.appliedAt)}</span>
+        {/* Kandidat yang mengendap lebih dari 14 hari diberi tanda amber.
+            Ini satu-satunya peringatan di kartu, jadi ia boleh berwarna. */}
         {aging && (
-          <span className="font-medium text-amber-600">{days}h di tahap ini</span>
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 font-semibold text-amber-800 ring-1 ring-inset ring-amber-200">
+            {days} hari di tahap ini
+          </span>
         )}
       </div>
     </article>

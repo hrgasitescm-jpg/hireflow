@@ -65,6 +65,11 @@ export default async function JobsPage({
   return (
     <>
       <PageHeader
+        eyebrow={
+          jobs && jobs.length > 0
+            ? `${jobs.length} lowongan · ${jobs.filter((j) => j.status === "published").length} terbit`
+            : undefined
+        }
         title="Lowongan"
         description="Semua posisi yang sedang dan pernah kamu buka."
         action={
@@ -84,33 +89,51 @@ export default async function JobsPage({
               EMPLOYMENT_TYPE_LABEL[job.employment_type],
               job.openings > 1 ? `${job.openings} slot` : null,
             ].filter(Boolean);
+            const applicants = counts.get(job.id) ?? 0;
 
             return (
               <Link
                 key={job.id}
                 href={`/${orgSlug}/jobs/${job.id}/pipeline`}
-                className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-line-soft"
+                className="group flex items-center gap-5 px-5 py-4 transition-colors first:rounded-t-surface last:rounded-b-surface hover:bg-line-soft"
               >
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="truncate text-[14px] font-medium text-ink">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <span className="truncate text-body font-semibold text-ink">
                       {job.title}
                     </span>
                     <Badge tone={STATUS_TONE[job.status] ?? "neutral"}>
                       {JOB_STATUS_LABEL[job.status]}
                     </Badge>
                   </div>
-                  <p className="mt-1 text-xs text-muted">{meta.join(" · ")}</p>
-                </div>
-
-                <div className="shrink-0 text-right">
-                  <p className="tabular text-[15px] font-semibold text-ink">
-                    {counts.get(job.id) ?? 0}
+                  <p className="mt-1.5 truncate text-caption text-muted">
+                    {meta.join(" · ")}
                   </p>
-                  <p className="text-[11px] text-muted">pelamar</p>
                 </div>
 
-                <p className="hidden w-24 shrink-0 text-right text-xs text-stone-400 sm:block">
+                {/* Jumlah pelamar dibuat sebagai pil, bukan angka telanjang.
+                    Ini kolom yang paling sering dipindai mata saat membuka
+                    daftar lowongan, jadi ia butuh bentuk sendiri. */}
+                <div
+                  className={
+                    applicants > 0
+                      ? "flex shrink-0 items-baseline gap-1.5 rounded-control bg-line-soft px-3 py-1.5 ring-1 ring-inset ring-line transition-colors group-hover:bg-surface"
+                      : "flex shrink-0 items-baseline gap-1.5 px-3 py-1.5"
+                  }
+                >
+                  <span
+                    className={
+                      applicants > 0
+                        ? "tabular text-heading text-ink"
+                        : "tabular text-heading text-subtle"
+                    }
+                  >
+                    {applicants}
+                  </span>
+                  <span className="text-caption text-muted">pelamar</span>
+                </div>
+
+                <p className="hidden w-24 shrink-0 text-right text-caption text-subtle sm:block">
                   {timeAgo(job.created_at)}
                 </p>
               </Link>

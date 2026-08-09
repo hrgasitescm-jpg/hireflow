@@ -24,7 +24,7 @@ export function CareerPageLink({ orgSlug }: { orgSlug: string }) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Input readOnly value={url} className="min-w-0 flex-1 font-mono text-xs" />
+      <Input readOnly value={url} className="min-w-0 flex-1 font-mono text-caption" />
       <Button variant="secondary" size="md" onClick={copy} type="button">
         {copied ? (
           <Check className="size-4 text-emerald-600" aria-hidden />

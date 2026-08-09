@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
-import { requireMembership, canAdmin } from "@/lib/auth";
+import {
+  requireMembership,
+  requireUser,
+  canAdmin,
+  canManage,
+} from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { Alert, Avatar, Badge, Card, PageHeader } from "@/components/ui";
-import { ROLE_LABEL, formatDate } from "@/lib/utils";
+import { Alert, Card, PageHeader } from "@/components/ui";
 import { OrgProfileForm } from "./org-profile-form";
 import { CareerPageLink } from "./career-page-link";
+import { TermManager } from "./term-manager";
+import { MemberManager } from "./member-manager";
 
 export const metadata: Metadata = { title: "Pengaturan" };
 
@@ -15,9 +21,10 @@ export default async function SettingsPage({
 }) {
   const { orgSlug } = await params;
   const membership = await requireMembership(orgSlug);
+  const user = await requireUser();
   const supabase = await createClient();
 
-  const [orgRes, membersRes] = await Promise.all([
+  const [orgRes, membersRes, departmentsRes, locationsRes] = await Promise.all([
     supabase
       .from("organizations")
       .select("id, name, slug, about, website, brand_color")
@@ -28,13 +35,24 @@ export default async function SettingsPage({
       .select("id, role, status, created_at, profiles!inner(id, full_name)")
       .eq("org_id", membership.org.id)
       .order("created_at"),
+    supabase
+      .from("departments")
+      .select("id, name")
+      .eq("org_id", membership.org.id)
+      .order("name"),
+    supabase
+      .from("locations")
+      .select("id, name")
+      .eq("org_id", membership.org.id)
+      .order("name"),
   ]);
 
   const org = orgRes.data;
   const isAdmin = canAdmin(membership.role);
+  const isManager = canManage(membership.role);
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-4xl">
       <PageHeader
         title="Pengaturan"
         description="Profil organisasi, career page, dan anggota tim."
@@ -42,7 +60,7 @@ export default async function SettingsPage({
 
       <div className="space-y-6">
         <Card className="p-5">
-          <h2 className="mb-1 text-sm font-semibold text-ink">
+          <h2 className="mb-1 text-heading text-ink">
             Career page
           </h2>
           <p className="mb-4 text-sm text-muted">
@@ -53,7 +71,7 @@ export default async function SettingsPage({
         </Card>
 
         <Card className="p-5">
-          <h2 className="mb-1 text-sm font-semibold text-ink">
+          <h2 className="mb-1 text-heading text-ink">
             Profil organisasi
           </h2>
           <p className="mb-4 text-sm text-muted">
@@ -76,10 +94,48 @@ export default async function SettingsPage({
           )}
         </Card>
 
+        {/* ----------------------------------------------------------------
+            Departemen & Lokasi
+
+            Keduanya mengisi dropdown di form lowongan. Sebelum ini tidak ada
+            layar mana pun yang bisa menambahkannya, sehingga dropdown-nya
+            selalu kosong dan terlihat seperti fitur yang rusak.
+            ---------------------------------------------------------------- */}
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Card className="p-5">
+            <h2 className="mb-1 text-heading text-ink">Departemen</h2>
+            <p className="mb-4 text-small text-muted">
+              Mengisi dropdown Departemen saat membuat lowongan.
+            </p>
+            <TermManager
+              orgSlug={orgSlug}
+              kind="departments"
+              terms={departmentsRes.data ?? []}
+              canEdit={isManager}
+              emptyHint="Belum ada departemen. Tambahkan supaya bisa dipilih di form lowongan."
+            />
+          </Card>
+
+          <Card className="p-5">
+            <h2 className="mb-1 text-heading text-ink">Lokasi</h2>
+            <p className="mb-4 text-small text-muted">
+              Mengisi dropdown Lokasi saat membuat lowongan, dan tampil di
+              career page.
+            </p>
+            <TermManager
+              orgSlug={orgSlug}
+              kind="locations"
+              terms={locationsRes.data ?? []}
+              canEdit={isManager}
+              emptyHint="Belum ada lokasi. Tambahkan supaya bisa dipilih di form lowongan."
+            />
+          </Card>
+        </div>
+
         <Card className="p-5">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-ink">
+              <h2 className="text-heading text-ink">
                 Anggota tim
               </h2>
               <p className="text-sm text-muted">
@@ -88,36 +144,23 @@ export default async function SettingsPage({
             </div>
           </div>
 
-          <ul className="divide-y divide-line">
-            {(membersRes.data ?? []).map((m) => {
+          <MemberManager
+            orgSlug={orgSlug}
+            canEdit={isAdmin}
+            members={(membersRes.data ?? []).map((m) => {
               const profile = m.profiles as unknown as {
                 id: string;
                 full_name: string;
               };
-              return (
-                <li key={m.id} className="flex items-center gap-3 py-3">
-                  <Avatar name={profile.full_name || "?"} size="md" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-ink">
-                      {profile.full_name || "Tanpa nama"}
-                    </p>
-                    <p className="text-xs text-muted">
-                      Bergabung {formatDate(m.created_at)}
-                    </p>
-                  </div>
-                  <Badge tone={m.role === "owner" ? "gold" : "neutral"}>
-                    {ROLE_LABEL[m.role]}
-                  </Badge>
-                </li>
-              );
+              return {
+                id: m.id,
+                role: m.role,
+                createdAt: m.created_at,
+                fullName: profile.full_name,
+                isSelf: profile.id === user.id,
+              };
             })}
-          </ul>
-
-          <Alert tone="info">
-            Undangan anggota lewat email hadir di Fase 2. Untuk sekarang, minta
-            rekanmu mendaftar lalu tambahkan lewat SQL editor Supabase (tabel{" "}
-            <code className="rounded bg-white/60 px-1">org_members</code>).
-          </Alert>
+          />
         </Card>
       </div>
     </div>

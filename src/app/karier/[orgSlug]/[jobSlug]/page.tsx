@@ -29,7 +29,7 @@ export async function generateMetadata({
   const description = job.description.slice(0, 160) || `Lowongan di ${org.name}`;
 
   return {
-    title: `${job.title} — ${org.name}`,
+    title: { absolute: `${job.title} — ${org.name.trim()}` },
     description,
     openGraph: { title: job.title, description, type: "article" },
   };
@@ -159,14 +159,14 @@ export default async function JobDetailPage({
 
       <Link
         href={`/karier/${org.slug}`}
-        className="inline-flex items-center gap-1.5 text-[13px] text-muted transition-colors hover:text-ink"
+        className="inline-flex items-center gap-1.5 text-small font-medium text-muted transition-colors hover:text-ink"
       >
         <ArrowLeft className="size-3.5" aria-hidden />
         Semua posisi
       </Link>
 
       <header className="mt-6 border-b border-line pb-8">
-        <h1 className="text-[30px] font-semibold leading-[1.15] text-ink sm:text-[34px]">
+        <h1 className="text-display text-ink">
           {job.title}
         </h1>
 
@@ -209,8 +209,8 @@ export default async function JobDetailPage({
         id="lamar"
         className="mt-16 scroll-mt-8 border-t border-line pt-10"
       >
-        <h2 className="text-[20px] font-semibold text-ink">Lamar posisi ini</h2>
-        <p className="mt-1.5 text-[13px] text-muted">
+        <h2 className="text-title text-ink">Lamar posisi ini</h2>
+        <p className="mt-3 text-body text-muted">
           Isi data di bawah dan unggah CV kamu. Sekitar 2 menit.
         </p>
 
@@ -236,14 +236,14 @@ function Meta({
 }) {
   return (
     <div>
-      <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-stone-400">
+      <dt className="text-label uppercase text-muted">
         {label}
       </dt>
       <dd
         className={
           accent
-            ? "mt-1 text-[13.5px] font-semibold text-gold-800"
-            : "mt-1 text-[13.5px] text-ink"
+            ? "mt-1.5 text-body font-semibold text-gold-800"
+            : "mt-1.5 text-body font-medium text-ink"
         }
       >
         {value}
@@ -255,8 +255,8 @@ function Meta({
 function Prose({ title, content }: { title: string; content: string }) {
   return (
     <section>
-      <h2 className="text-[15px] font-semibold text-ink">{title}</h2>
-      <div className="mt-3 text-[15px] leading-[1.75] text-ink-soft">
+      <h2 className="text-heading text-ink">{title}</h2>
+      <div className="mt-4 text-[1.0625rem] leading-[1.75] text-ink-soft">
         <RichText content={content} />
       </div>
     </section>

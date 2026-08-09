@@ -18,12 +18,10 @@ export default async function OnboardingPage() {
   return (
     <div className="flex min-h-screen flex-col justify-center px-6 py-12">
       <div className="mx-auto w-full max-w-sm">
-        <Logo variant="lockup" className="h-7 w-auto" priority />
+        <Logo size="md" />
 
-        <h1 className="mt-10 text-xl font-semibold text-ink">
-          Buat organisasi pertamamu
-        </h1>
-        <p className="mt-1.5 text-[13px] leading-relaxed text-muted">
+        <h1 className="mt-12 text-title text-ink">Buat organisasi pertamamu</h1>
+        <p className="mt-3 text-body leading-relaxed text-muted">
           Semua lowongan, kandidat, dan anggota tim berada di dalam organisasi.
         </p>
 

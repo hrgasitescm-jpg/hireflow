@@ -82,7 +82,7 @@ export function JobForm({
   return (
     <form action={formAction} className="space-y-6">
       <Card className="space-y-5 p-5">
-        <h2 className="text-sm font-semibold text-ink">Informasi dasar</h2>
+        <h2 className="text-heading text-ink">Informasi dasar</h2>
 
         <Field label="Judul lowongan" htmlFor="title" required>
           <Input
@@ -201,7 +201,7 @@ export function JobForm({
       </Card>
 
       <Card className="space-y-5 p-5">
-        <h2 className="text-sm font-semibold text-ink">Detail posisi</h2>
+        <h2 className="text-heading text-ink">Detail posisi</h2>
 
         <Field
           label="Deskripsi pekerjaan"
@@ -252,7 +252,7 @@ export function JobForm({
       </Card>
 
       <Card className="space-y-5 p-5">
-        <h2 className="text-sm font-semibold text-ink">Gaji</h2>
+        <h2 className="text-heading text-ink">Gaji</h2>
 
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Gaji minimum (IDR)" htmlFor="salaryMin">
@@ -288,7 +288,7 @@ export function JobForm({
           />
           <span>
             Tampilkan rentang gaji di halaman lowongan publik
-            <span className="mt-0.5 block text-xs text-muted">
+            <span className="mt-0.5 block text-caption text-muted">
               Lowongan yang mencantumkan gaji biasanya mendapat lebih banyak
               pelamar relevan.
             </span>

@@ -14,52 +14,59 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-2">
-      {/* Panel kiri — hanya tampil di layar lebar */}
-      <aside className="relative hidden overflow-hidden bg-ink lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div
-          aria-hidden
-          className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-400 to-transparent"
-        />
-        {/* Cahaya emas sangat halus di sudut */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-24 -top-24 size-96 rounded-full bg-gold-400/8 blur-3xl"
-        />
+    <div className="min-h-screen lg:grid lg:grid-cols-[1.05fr_1fr]">
+      {/* ------------------------------------------------------------------
+          Panel kiri — hanya tampil di layar lebar.
 
-        <Link href="/" className="relative">
-          <Logo variant="lockup" className="h-8 w-auto" priority />
+          Versi lama memakai bidang ink polos, dan bidang gelap sebesar itu
+          tanpa apa-apa di dalamnya justru terbaca seperti halaman yang belum
+          selesai. Kelas .panel-ink menambahkan kisi halus dan cahaya emas di
+          sudut: cukup untuk memberi tekstur, masih cukup tenang untuk tidak
+          bersaing dengan formulir di sebelahnya.
+          ------------------------------------------------------------------ */}
+      <aside className="panel-ink relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-14">
+        <div aria-hidden className="rule-gold absolute inset-x-0 top-0 h-px" />
+
+        <Link href="/" className="relative w-fit">
+          <Logo size="lg" priority />
         </Link>
 
-        <div className="relative max-w-sm">
-          <h2 className="text-[26px] font-semibold leading-snug tracking-tight text-white">
+        <div className="relative max-w-md">
+          <h2 className="text-display text-white">
             Rekrutmen yang rapi,
             <br />
             tanpa spreadsheet.
           </h2>
-          <ul className="mt-8 space-y-3.5">
+          <p className="mt-5 text-body leading-relaxed text-stone-400">
+            Satu tempat untuk lowongan, pelamar, dan setiap keputusan yang
+            diambil tim kamu.
+          </p>
+
+          <ul className="mt-10 space-y-4">
             {POINTS.map((point) => (
-              <li key={point} className="flex gap-3 text-[14px] text-stone-300">
-                <Check
-                  className="mt-0.5 size-4 shrink-0 text-gold-400"
+              <li key={point} className="flex items-start gap-3.5">
+                <span
                   aria-hidden
-                />
-                {point}
+                  className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-gold-400/15 ring-1 ring-inset ring-gold-400/25"
+                >
+                  <Check className="size-3 text-gold-400" />
+                </span>
+                <span className="text-body text-stone-300">{point}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        <p className="relative text-xs text-stone-500">
-          © {new Date().getFullYear()} CKB
+        <p className="relative text-caption text-stone-500">
+          © {new Date().getFullYear()} HireFlow
         </p>
       </aside>
 
-      {/* Kolom form */}
-      <main className="flex min-h-screen flex-col justify-center px-6 py-12 sm:px-12">
+      {/* Kolom formulir */}
+      <main className="flex min-h-screen flex-col justify-center bg-surface px-6 py-14 sm:px-12">
         <div className="mx-auto w-full max-w-sm">
-          <Link href="/" className="mb-10 inline-block lg:hidden">
-            <Logo variant="lockup" className="h-7 w-auto" priority />
+          <Link href="/" className="mb-12 inline-block lg:hidden">
+            <Logo size="md" />
           </Link>
           {children}
         </div>

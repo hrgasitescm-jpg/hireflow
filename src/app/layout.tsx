@@ -28,19 +28,17 @@ const inter = localFont({
 
 export const metadata: Metadata = {
   title: {
-    default: "CKB — Applicant Tracking System",
-    template: "%s · CKB",
+    default: "HireFlow — Applicant Tracking System",
+    template: "%s · HireFlow",
   },
   description:
     "Kelola lowongan, pelamar, dan pipeline rekrutmen dalam satu tempat yang rapi.",
-  icons: {
-    icon: "/icon-32.png",
-    apple: "/icon-180.png",
-  },
+  // Ikon tidak didaftarkan manual di sini. Next.js membacanya dari konvensi
+  // berkas: src/app/icon.svg untuk favicon, src/app/apple-icon.png untuk iOS.
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1c1917",
+  themeColor: "#12100f",
 };
 
 export default function RootLayout({

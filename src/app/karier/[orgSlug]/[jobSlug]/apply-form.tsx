@@ -47,10 +47,10 @@ export function ApplyForm({
         <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-gold-50">
           <CheckCircle2 className="size-6 text-gold-600" aria-hidden />
         </span>
-        <h3 className="mt-4 text-[17px] font-semibold text-ink">
+        <h3 className="mt-5 text-title text-ink">
           Lamaran kamu terkirim
         </h3>
-        <p className="mx-auto mt-2 max-w-sm text-[13.5px] leading-relaxed text-muted">
+        <p className="mx-auto mt-3 max-w-sm text-body leading-relaxed text-muted">
           Tim {orgName} akan meninjau lamaranmu. Simpan tautan di bawah untuk
           memantau statusnya kapan saja.
         </p>
@@ -165,7 +165,7 @@ export function ApplyForm({
             }
             aria-hidden
           />
-          <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink-soft">
+          <span className="min-w-0 flex-1 truncate text-small text-ink-soft">
             {fileName ?? "Pilih berkas CV…"}
           </span>
         </label>
@@ -215,7 +215,7 @@ export function ApplyForm({
         </Field>
       ))}
 
-      <label className="flex items-start gap-3 rounded-control bg-line-soft p-4 text-[12.5px] leading-relaxed text-ink-soft">
+      <label className="flex items-start gap-3 rounded-control bg-line-soft p-4 text-caption leading-relaxed text-ink-soft ring-1 ring-inset ring-line">
         <Checkbox name="consent" required className="mt-0.5" />
         <span>
           Saya menyetujui data pribadi saya diproses oleh {orgName} untuk

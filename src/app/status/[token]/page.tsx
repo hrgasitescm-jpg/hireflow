@@ -6,7 +6,7 @@ import { Logo } from "@/components/logo";
 import { cn, formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Status lamaran",
+  title: { absolute: "Status lamaran" },
   robots: { index: false, follow: false },
 };
 
@@ -70,25 +70,25 @@ export default async function StatusPage({
       <div aria-hidden className="rule-gold h-px" />
 
       <main className="mx-auto w-full max-w-lg flex-1 px-6 py-16">
-        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-gold-700">
+        <p className="text-label uppercase tracking-[0.16em] text-gold-700">
           Status lamaran
         </p>
-        <h1 className="mt-3 text-[26px] font-semibold leading-tight text-ink">
+        <h1 className="mt-4 text-title text-ink">
           {job.title}
         </h1>
-        <p className="mt-2 text-[13.5px] text-muted">
+        <p className="mt-3 text-body text-muted">
           {orgRes.data?.name ?? "Perusahaan"} · atas nama {candidate.full_name}
         </p>
-        <p className="mt-1 text-[13px] text-stone-400">
+        <p className="mt-1.5 text-small text-subtle">
           Dikirim {formatDate(application.applied_at)}
         </p>
 
         {rejected ? (
           <div className="mt-10 rounded-surface border border-line px-5 py-6">
-            <p className="text-[14px] font-medium text-ink">
+            <p className="text-body font-semibold text-ink">
               Lamaran belum bisa dilanjutkan
             </p>
-            <p className="mt-2 text-[13.5px] leading-relaxed text-muted">
+            <p className="mt-2.5 text-small leading-relaxed text-muted">
               Terima kasih sudah meluangkan waktu. Kami menyimpan datamu dan
               akan menghubungi jika ada posisi yang lebih cocok.
             </p>
@@ -139,7 +139,7 @@ export default async function StatusPage({
                   <div className={cn("pb-8", isLast && "pb-0")}>
                     <p
                       className={cn(
-                        "text-[14px] leading-6",
+                        "text-body leading-6",
                         current
                           ? "font-semibold text-ink"
                           : complete
@@ -150,7 +150,7 @@ export default async function StatusPage({
                       {stage.name}
                     </p>
                     {current && (
-                      <p className="mt-0.5 text-[12.5px] text-gold-700">
+                      <p className="mt-1 text-caption font-medium text-gold-700">
                         Tahap kamu saat ini
                       </p>
                     )}
@@ -161,18 +161,21 @@ export default async function StatusPage({
           </ol>
         )}
 
-        <p className="mt-12 border-t border-line pt-5 text-[12px] leading-relaxed text-stone-400">
+        <p className="mt-12 border-t border-line pt-5 text-caption leading-relaxed text-muted">
           Simpan tautan halaman ini untuk mengecek status kapan saja. Tautan ini
           bersifat pribadi — jangan dibagikan ke orang lain.
         </p>
       </main>
 
-      <footer className="border-t border-line py-8">
-        <div className="mx-auto flex max-w-lg flex-col items-center gap-2 px-6">
-          <span className="text-[11px] uppercase tracking-[0.14em] text-stone-400">
-            Didukung oleh
-          </span>
-          <Logo variant="lockup" className="h-5 w-auto opacity-70" />
+      {/* "Didukung oleh" dihapus: aplikasi ini milik satu perusahaan, jadi
+          logonya sendiri di footer adalah tanda tangan halaman, bukan iklan
+          penyedia layanan. */}
+      <footer className="border-t border-line py-10">
+        <div className="mx-auto flex max-w-lg flex-col items-center gap-3 px-6">
+          <Logo size="sm" />
+          <p className="text-caption text-muted">
+            {orgRes.data?.name.trim() ?? "Perusahaan"}
+          </p>
         </div>
       </footer>
     </div>

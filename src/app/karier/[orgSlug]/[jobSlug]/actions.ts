@@ -240,12 +240,64 @@ export async function submitApplication(
     return { error: "Gagal mengirim lamaran. Coba lagi sebentar lagi." };
   }
 
+  // ---------- 8. Simpan jawaban pertanyaan screening ----------
+  /**
+   * Form lamaran sudah lama merender pertanyaan dari job_questions, tapi tidak
+   * ada satu baris pun yang membaca jawabannya — jawaban pelamar hilang diam
+   * -diam. Bagian ini yang menutup lubang itu.
+   *
+   * Pertanyaan diambil ulang dari database, bukan dipercaya dari formData:
+   * kalau tidak, siapa pun bisa mengirim q_<uuid> sembarangan dan menanam
+   * baris untuk pertanyaan milik lowongan lain.
+   */
+  const { data: questions } = await supabase
+    .from("job_questions")
+    .select("id, type, required, label")
+    .eq("job_id", job.id);
+
+  const answers = (questions ?? [])
+    .map((q) => {
+      const raw = formData.get(`q_${q.id}`);
+      const text = typeof raw === "string" ? raw.trim() : "";
+      if (!text) return null;
+
+      /* Kolomnya jsonb, jadi tipe disimpan sesuai jenis pertanyaan supaya
+         nanti bisa difilter tanpa menebak-nebak isi string. */
+      let value: unknown = text;
+      if (q.type === "number") {
+        const n = Number(text);
+        value = Number.isFinite(n) ? n : text;
+      } else if (q.type === "boolean") {
+        value = text === "true" || text === "on" || text === "ya";
+      }
+
+      return {
+        application_id: application.id,
+        question_id: q.id,
+        answer: value as never,
+      };
+    })
+    .filter((a) => a !== null);
+
+  if (answers.length > 0) {
+    const { error: answersError } = await supabase
+      .from("application_answers")
+      .insert(answers);
+
+    /* Lamarannya sendiri sudah tersimpan. Gagal menyimpan jawaban tidak boleh
+       membatalkan lamaran — pelamar sudah menyerahkan CV dan datanya. Cukup
+       dicatat supaya recruiter tahu ada yang tidak lengkap. */
+    if (answersError) {
+      console.error("Gagal menyimpan jawaban screening:", answersError.message);
+    }
+  }
+
   await supabase.from("activities").insert({
     org_id: org.id,
     entity_type: "application",
     entity_id: application.id,
     action: "applied",
-    metadata: { source: "career_page" },
+    metadata: { source: "career_page", answers: answers.length },
   });
 
   revalidatePath(`/${orgSlug}/jobs/${job.id}/pipeline`);

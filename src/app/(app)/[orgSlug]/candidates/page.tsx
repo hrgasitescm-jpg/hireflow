@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   Avatar,
   Badge,
+  buttonClass,
   Card,
   EmptyState,
   Input,
@@ -56,21 +57,22 @@ export default async function CandidatesPage({
   return (
     <>
       <PageHeader
+        eyebrow={total > 0 ? `${total} kandidat` : undefined}
         title="Kandidat"
-        description={`${total} kandidat dalam database organisasi.`}
+        description="Semua orang yang pernah melamar ke organisasi ini, termasuk lamaran yang sudah ditutup."
       />
 
-      <form className="mb-4 flex max-w-md gap-2">
+      <form className="mb-5 flex max-w-md gap-2">
         <div className="relative flex-1">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-stone-400"
+            className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-subtle"
             aria-hidden
           />
           <Input
             name="q"
             defaultValue={q}
             placeholder="Cari nama atau email…"
-            className="pl-9"
+            className="pl-10"
             aria-label="Cari kandidat"
           />
         </div>
@@ -83,23 +85,36 @@ export default async function CandidatesPage({
               <Link
                 key={c.id}
                 href={`/${orgSlug}/candidates/${c.id}`}
-                className="flex items-center gap-3 px-5 py-3.5 hover:bg-line-soft"
+                className="flex items-center gap-4 px-5 py-4 transition-colors first:rounded-t-surface last:rounded-b-surface hover:bg-line-soft"
               >
                 <Avatar name={c.full_name} size="md" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-ink">
+                  <p className="truncate text-body font-semibold text-ink">
                     {c.full_name}
                   </p>
-                  <p className="truncate text-xs text-muted">
+                  <p className="truncate text-caption text-muted">
                     {c.headline ?? c.email}
                   </p>
                 </div>
-                <div className="hidden shrink-0 gap-1 sm:flex">
+
+                {/* years_exp sebelumnya ikut diambil dari database tapi tidak
+                    pernah ditampilkan. Pengalaman adalah penyaring pertama
+                    yang dipakai recruiter, jadi sekarang ditampilkan. */}
+                {c.years_exp != null && (
+                  <span className="hidden shrink-0 text-caption text-muted lg:block">
+                    <span className="tabular font-semibold text-ink-soft">
+                      {c.years_exp}
+                    </span>{" "}
+                    thn
+                  </span>
+                )}
+
+                <div className="hidden shrink-0 gap-1.5 sm:flex">
                   {c.skills.slice(0, 3).map((s) => (
                     <Badge key={s}>{s}</Badge>
                   ))}
                 </div>
-                <span className="hidden w-24 shrink-0 text-right text-xs text-stone-400 md:block">
+                <span className="hidden w-24 shrink-0 text-right text-caption text-subtle md:block">
                   {formatDate(c.created_at)}
                 </span>
               </Link>
@@ -108,17 +123,18 @@ export default async function CandidatesPage({
 
           {totalPages > 1 && (
             <nav
-              className="mt-4 flex items-center justify-between text-sm"
+              className="mt-5 flex items-center justify-between gap-4"
               aria-label="Navigasi halaman"
             >
-              <span className="text-muted">
-                Halaman {pageNum} dari {totalPages}
+              <span className="text-small text-muted">
+                Halaman <span className="tabular font-semibold text-ink">{pageNum}</span>{" "}
+                dari <span className="tabular font-semibold text-ink">{totalPages}</span>
               </span>
               <div className="flex gap-2">
                 {pageNum > 1 && (
                   <Link
                     href={`?q=${encodeURIComponent(q)}&page=${pageNum - 1}`}
-                    className="rounded-control bg-white px-3 py-1.5 ring-1 ring-line hover:bg-line-soft"
+                    className={buttonClass({ variant: "secondary", size: "sm" })}
                   >
                     Sebelumnya
                   </Link>
@@ -126,7 +142,7 @@ export default async function CandidatesPage({
                 {pageNum < totalPages && (
                   <Link
                     href={`?q=${encodeURIComponent(q)}&page=${pageNum + 1}`}
-                    className="rounded-control bg-white px-3 py-1.5 ring-1 ring-line hover:bg-line-soft"
+                    className={buttonClass({ variant: "secondary", size: "sm" })}
                   >
                     Berikutnya
                   </Link>

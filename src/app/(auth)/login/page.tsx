@@ -13,14 +13,14 @@ export default async function LoginPage({
 
   return (
     <>
-      <h1 className="text-xl font-semibold text-ink">Masuk ke akun</h1>
-      <p className="mt-1.5 text-[13px] text-muted">
+      <h1 className="text-title text-ink">Masuk ke akun</h1>
+      <p className="mt-3 text-body text-muted">
         Kelola lowongan dan pelamar perusahaanmu.
       </p>
 
       <LoginForm next={next ?? "/"} />
 
-      <p className="mt-8 text-[13px] text-muted">
+      <p className="mt-10 text-small text-muted">
         Belum punya akun?{" "}
         <Link
           href="/register"

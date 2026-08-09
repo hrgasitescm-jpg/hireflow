@@ -7,14 +7,12 @@ export const metadata: Metadata = { title: "Daftar" };
 export default function RegisterPage() {
   return (
     <>
-      <h1 className="text-xl font-semibold text-ink">Buat akun</h1>
-      <p className="mt-1.5 text-[13px] text-muted">
-        Gratis, tanpa kartu kredit.
-      </p>
+      <h1 className="text-title text-ink">Buat akun</h1>
+      <p className="mt-3 text-body text-muted">Gratis, tanpa kartu kredit.</p>
 
       <RegisterForm />
 
-      <p className="mt-8 text-[13px] text-muted">
+      <p className="mt-10 text-small text-muted">
         Sudah punya akun?{" "}
         <Link
           href="/login"

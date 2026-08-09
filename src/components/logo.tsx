@@ -1,68 +1,74 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-/**
- * Logo CKB.
- *
- * `lockup` = mark + wordmark, untuk header dan halaman auth.
- * `mark`   = hanya ikon, untuk avatar, sidebar sempit, dan favicon.
- *
- * Aset di-crop rapat dari logo asli supaya tidak ada padding tak terduga.
- */
+/* ==========================================================================
+   Logo CKB
+   --------------------------------------------------------------------------
+   Aset asli perusahaan, bukan gambar buatan. Dipotong rapat dari berkas yang
+   diberikan (607×405 dengan padding transparan) menjadi:
 
-export function Logo({
-  variant = "lockup",
+     public/logo-ckb.png   576×162  lockup penuh — mark + wordmark
+     public/mark-ckb.png   228×162  mark saja — untuk ruang sempit
+
+   Ukuran diatur lewat prop `size`, dan tingginya yang dikunci: rasio lockup
+   3,56:1 membuat pengaturan berbasis lebar mudah meleset di sidebar sempit.
+
+   Catatan kontras: wordmark emas di atas putih hanya sekitar 1,7:1. Untuk
+   teks itu tidak layak, tapi logo dikecualikan dari syarat kontras WCAG dan
+   ini memang warna merek. Yang tidak boleh adalah meniru warna itu untuk
+   teks biasa — lihat DESIGN.md.
+   ========================================================================== */
+
+const LOCKUP = { src: "/logo-ckb.png", width: 576, height: 162 };
+const MARK = { src: "/mark-ckb.png", width: 228, height: 162 };
+
+const SIZE_CLASS = {
+  sm: "h-5",
+  md: "h-6",
+  lg: "h-8",
+  xl: "h-10",
+} as const;
+
+export type LogoSize = keyof typeof SIZE_CLASS;
+
+/** Mark saja — favicon, ruang sempit, halaman 404. */
+export function LogoMark({
+  size = 32,
   className,
-  priority = false,
 }: {
-  variant?: "lockup" | "mark";
+  size?: number;
   className?: string;
-  priority?: boolean;
 }) {
-  if (variant === "mark") {
-    return (
-      <Image
-        src="/mark-ckb.png"
-        alt="CKB"
-        width={228}
-        height={162}
-        priority={priority}
-        className={cn("h-7 w-auto", className)}
-      />
-    );
-  }
-
   return (
     <Image
-      src="/logo-ckb.png"
+      src={MARK.src}
       alt="CKB"
-      width={576}
-      height={162}
-      priority={priority}
-      className={cn("h-7 w-auto", className)}
+      width={MARK.width}
+      height={MARK.height}
+      style={{ height: size, width: "auto" }}
+      className={cn("shrink-0", className)}
     />
   );
 }
 
-/** Logo + label produk, dipakai di sidebar dan halaman auth. */
-export function Wordmark({
+/** Lockup penuh — sidebar, halaman auth, footer. */
+export function Logo({
+  size = "md",
   className,
-  subtitle = "Recruitment",
+  priority = false,
 }: {
+  size?: LogoSize;
   className?: string;
-  subtitle?: string | null;
+  priority?: boolean;
 }) {
   return (
-    <span className={cn("flex items-center gap-2.5", className)}>
-      <Logo variant="lockup" className="h-6 w-auto" priority />
-      {subtitle && (
-        <>
-          <span aria-hidden className="h-4 w-px bg-line" />
-          <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-            {subtitle}
-          </span>
-        </>
-      )}
-    </span>
+    <Image
+      src={LOCKUP.src}
+      alt="CKB"
+      width={LOCKUP.width}
+      height={LOCKUP.height}
+      priority={priority}
+      className={cn("w-auto", SIZE_CLASS[size], className)}
+    />
   );
 }

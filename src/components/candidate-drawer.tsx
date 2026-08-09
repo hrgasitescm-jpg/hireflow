@@ -154,7 +154,7 @@ export function CandidateDrawer({
             type="button"
             onClick={onClose}
             aria-label="Tutup"
-            className="rounded-control p-1.5 text-stone-400 hover:bg-line-soft hover:text-ink-soft"
+            className="rounded-control p-1.5 text-subtle hover:bg-line-soft hover:text-ink-soft"
           >
             <X className="size-5" aria-hidden />
           </button>
@@ -165,7 +165,7 @@ export function CandidateDrawer({
 
           <section className="space-y-2 text-sm">
             <div className="flex items-center gap-2 text-ink-soft">
-              <Mail className="size-4 shrink-0 text-stone-400" aria-hidden />
+              <Mail className="size-4 shrink-0 text-subtle" aria-hidden />
               <a
                 href={`mailto:${candidate.email}`}
                 className="truncate hover:underline"
@@ -182,7 +182,7 @@ export function CandidateDrawer({
 
           {candidate.skills.length > 0 && (
             <section>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+              <h3 className="mb-2 text-label uppercase text-muted">
                 Skill
               </h3>
               <div className="flex flex-wrap gap-1.5">
@@ -194,7 +194,7 @@ export function CandidateDrawer({
           )}
 
           <section className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
+            <h3 className="text-label uppercase text-muted">
               Tindakan
             </h3>
 
@@ -253,7 +253,7 @@ export function CandidateDrawer({
           </section>
 
           <section>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+            <h3 className="mb-2 text-label uppercase text-muted">
               Catatan tim
             </h3>
 
@@ -274,17 +274,17 @@ export function CandidateDrawer({
 
             <ul className="mt-4 space-y-3">
               {loadingDetail && (
-                <li className="text-sm text-stone-400">Memuat…</li>
+                <li className="text-sm text-subtle">Memuat…</li>
               )}
               {!loadingDetail && notes.length === 0 && (
-                <li className="text-sm text-stone-400">Belum ada catatan.</li>
+                <li className="text-sm text-subtle">Belum ada catatan.</li>
               )}
               {notes.map((n) => (
                 <li key={n.id} className="rounded-control bg-line-soft p-3">
                   <p className="whitespace-pre-wrap text-sm text-ink-soft">
                     {n.body}
                   </p>
-                  <p className="mt-1.5 text-xs text-stone-400">
+                  <p className="mt-1.5 text-caption text-subtle">
                     {n.author} · {formatDate(n.created_at)}
                   </p>
                 </li>

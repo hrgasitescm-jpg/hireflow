@@ -59,6 +59,42 @@ export default async function CandidateProfilePage({
       .limit(20),
   ]);
 
+  /**
+   * Jawaban pertanyaan screening.
+   *
+   * Sebelumnya tabel application_answers tidak pernah dibaca di layar mana
+   * pun — recruiter tidak punya cara melihat jawaban pelamar. Diambil untuk
+   * semua lamaran kandidat ini sekaligus, lalu dikelompokkan per lamaran.
+   */
+  const applicationIds = (appsRes.data ?? []).map((a) => a.id);
+  const { data: answerRows } = applicationIds.length
+    ? await supabase
+        .from("application_answers")
+        .select("application_id, answer, job_questions!inner(label, position)")
+        .in("application_id", applicationIds)
+    : { data: [] };
+
+  const answersByApplication = new Map<
+    string,
+    { label: string; position: number; answer: unknown }[]
+  >();
+  for (const row of answerRows ?? []) {
+    const question = row.job_questions as unknown as {
+      label: string;
+      position: number;
+    };
+    const list = answersByApplication.get(row.application_id) ?? [];
+    list.push({
+      label: question.label,
+      position: question.position,
+      answer: row.answer,
+    });
+    answersByApplication.set(row.application_id, list);
+  }
+  for (const list of answersByApplication.values()) {
+    list.sort((a, b) => a.position - b.position);
+  }
+
   const contact = [
     { icon: Mail, value: candidate.email, href: `mailto:${candidate.email}` },
     candidate.phone
@@ -90,7 +126,7 @@ export default async function CandidateProfilePage({
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-6">
           <Card className="p-5">
-            <h2 className="mb-3 text-sm font-semibold text-ink">
+            <h2 className="mb-3 text-heading text-ink">
               Riwayat lamaran
             </h2>
             {appsRes.data && appsRes.data.length > 0 ? (
@@ -100,6 +136,7 @@ export default async function CandidateProfilePage({
                   const stage = a.job_stages as unknown as {
                     name: string;
                   } | null;
+                  const answers = answersByApplication.get(a.id) ?? [];
                   return (
                     <li key={a.id}>
                       <Link
@@ -107,10 +144,10 @@ export default async function CandidateProfilePage({
                         className="flex items-center justify-between gap-3 py-3 hover:opacity-80"
                       >
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-ink">
+                          <p className="truncate text-body font-semibold text-ink">
                             {job.title}
                           </p>
-                          <p className="text-xs text-muted">
+                          <p className="text-caption text-muted">
                             {stage?.name ?? "—"} · melamar{" "}
                             {formatDate(a.applied_at)}
                           </p>
@@ -119,6 +156,23 @@ export default async function CandidateProfilePage({
                           {APPLICATION_STATUS_LABEL[a.status]}
                         </Badge>
                       </Link>
+
+                      {answers.length > 0 && (
+                        <dl className="mb-3 space-y-3 rounded-control bg-line-soft px-4 py-3 ring-1 ring-inset ring-line">
+                          {answers.map((ans) => (
+                            <div key={ans.label}>
+                              <dt className="text-caption font-semibold text-ink-soft">
+                                {ans.label}
+                              </dt>
+                              <dd className="mt-1 text-small whitespace-pre-wrap text-muted">
+                                {typeof ans.answer === "string"
+                                  ? ans.answer
+                                  : JSON.stringify(ans.answer)}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      )}
                     </li>
                   );
                 })}
@@ -129,7 +183,7 @@ export default async function CandidateProfilePage({
           </Card>
 
           <Card className="p-5">
-            <h2 className="mb-3 text-sm font-semibold text-ink">
+            <h2 className="mb-3 text-heading text-ink">
               Catatan
             </h2>
             {notesRes.data && notesRes.data.length > 0 ? (
@@ -143,7 +197,7 @@ export default async function CandidateProfilePage({
                       <p className="whitespace-pre-wrap text-sm text-ink-soft">
                         {n.body}
                       </p>
-                      <p className="mt-1.5 text-xs text-stone-400">
+                      <p className="mt-1.5 text-caption text-subtle">
                         {author?.full_name ?? "Anggota tim"} ·{" "}
                         {timeAgo(n.created_at)}
                       </p>
@@ -168,7 +222,7 @@ export default async function CandidateProfilePage({
                   {candidate.full_name}
                 </p>
                 {candidate.years_exp != null && (
-                  <p className="text-xs text-muted">
+                  <p className="text-caption text-muted">
                     {candidate.years_exp} tahun pengalaman
                   </p>
                 )}
@@ -178,7 +232,7 @@ export default async function CandidateProfilePage({
             <ul className="space-y-2 text-sm">
               {contact.map(({ icon: Icon, value, href }) => (
                 <li key={value} className="flex items-center gap-2 text-ink-soft">
-                  <Icon className="size-4 shrink-0 text-stone-400" aria-hidden />
+                  <Icon className="size-4 shrink-0 text-subtle" aria-hidden />
                   {href ? (
                     <a
                       href={href}
@@ -198,7 +252,7 @@ export default async function CandidateProfilePage({
 
           {candidate.skills.length > 0 && (
             <Card className="p-5">
-              <h2 className="mb-3 text-sm font-semibold text-ink">Skill</h2>
+              <h2 className="mb-3 text-heading text-ink">Skill</h2>
               <div className="flex flex-wrap gap-1.5">
                 {candidate.skills.map((s) => (
                   <Badge key={s}>{s}</Badge>
@@ -207,7 +261,7 @@ export default async function CandidateProfilePage({
             </Card>
           )}
 
-          <Card className="p-5 text-xs text-muted">
+          <Card className="p-5 text-caption text-muted">
             <p>Sumber: {candidate.source}</p>
             <p className="mt-1">Ditambahkan {formatDate(candidate.created_at)}</p>
             {candidate.consent_at && (

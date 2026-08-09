@@ -14,12 +14,16 @@ export function SubmitButton({
   variant = "primary",
   size = "md",
   className,
+  /* Tombol yang isinya hanya ikon wajib punya label — tanpa ini pembaca
+     layar hanya mendengar "tombol". */
+  "aria-label": ariaLabel,
 }: {
   children: React.ReactNode;
   pendingLabel?: string;
-  variant?: "primary" | "secondary" | "ghost" | "danger";
+  variant?: "primary" | "secondary" | "ghost" | "danger" | "gold";
   size?: "sm" | "md" | "lg";
   className?: string;
+  "aria-label"?: string;
 }) {
   const { pending } = useFormStatus();
 
@@ -31,6 +35,7 @@ export function SubmitButton({
       className={className}
       disabled={pending}
       aria-busy={pending}
+      aria-label={ariaLabel}
     >
       {pending && <Loader2 className="size-4 animate-spin" aria-hidden />}
       {pending ? (pendingLabel ?? "Menyimpan…") : children}

@@ -1,4 +1,4 @@
-# CKB
+# HireFlow
 
 ATS (Applicant Tracking System) multi-tenant di atas **Next.js 16 + Supabase**, dirancang untuk berjalan di free tier.
 
@@ -14,7 +14,7 @@ Apa yang sudah jalan (Fase 0 + Fase 1):
 - Pipeline kanban drag-and-drop dengan optimistic update
 - Profil kandidat, riwayat lamaran, catatan tim, audit log
 - Portal status lamaran untuk kandidat (tanpa registrasi)
-- Design system sendiri: netral hangat + aksen emas CKB, Inter di-host lokal
+- Design system sendiri: netral hangat + aksen emas HireFlow, Inter di-host lokal
 
 ---
 
@@ -106,7 +106,7 @@ src/
 │  └─ api/               endpoint detail kandidat & cron
 ├─ components/
 │  ├─ ui/index.tsx       komponen dasar (Button, Card, Field, Badge, …)
-│  └─ logo.tsx           logo CKB (lockup & mark)
+│  └─ logo.tsx           logo HireFlow, SVG inline (lockup & mark)
 ├─ lib/
 │  ├─ supabase/          client (browser), server (RLS), admin (service role)
 │  ├─ auth.ts            helper sesi & membership
