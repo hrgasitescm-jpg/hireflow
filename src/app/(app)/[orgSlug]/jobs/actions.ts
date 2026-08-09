@@ -156,23 +156,51 @@ const ALLOWED_STATUS = [
   "archived",
 ] as const;
 
+export type StatusResult = { ok: boolean; error?: string };
+
+/**
+ * Mengubah status lowongan.
+ *
+ * Versi sebelumnya tidak memeriksa hasil update sama sekali. Kalau update
+ * ditolak — peran kurang, baris tidak cocok, RLS menyaring — tombolnya
+ * berputar sebentar lalu kembali seperti semula tanpa pesan apa pun, dan
+ * pengguna menyimpulkan aplikasinya rusak. Sekarang setiap kegagalan
+ * dilaporkan ke pemanggil.
+ */
 export async function setJobStatus(
   orgSlug: string,
   jobId: string,
   status: (typeof ALLOWED_STATUS)[number],
-) {
+): Promise<StatusResult> {
   const membership = await requireMembership(orgSlug);
-  if (!canManage(membership.role)) return;
-  if (!ALLOWED_STATUS.includes(status)) return;
+  if (!canManage(membership.role)) {
+    return { ok: false, error: "Kamu tidak punya izin mengubah status lowongan." };
+  }
+  if (!ALLOWED_STATUS.includes(status)) {
+    return { ok: false, error: "Status tidak dikenal." };
+  }
 
   const supabase = await createClient();
-  await supabase
+  /* .select() dipakai supaya baris yang benar-benar terubah ikut kembali.
+     Tanpa itu, update yang tidak menyentuh baris apa pun — misalnya karena
+     RLS menyaringnya — tidak bisa dibedakan dari update yang berhasil. */
+  const { data, error } = await supabase
     .from("jobs")
     .update({ status })
     .eq("id", jobId)
-    .eq("org_id", membership.org.id);
+    .eq("org_id", membership.org.id)
+    .select("id");
+
+  if (error) return { ok: false, error: error.message };
+  if (!data || data.length === 0) {
+    return {
+      ok: false,
+      error: "Lowongan tidak ditemukan atau kamu tidak berhak mengubahnya.",
+    };
+  }
 
   revalidatePath(`/${orgSlug}/jobs`);
   revalidatePath(`/${orgSlug}/jobs/${jobId}/pipeline`);
   revalidatePath(`/karier/${orgSlug}`);
+  return { ok: true };
 }

@@ -8,6 +8,7 @@ import { Badge, buttonClass } from "@/components/ui";
 import { JOB_STATUS_LABEL } from "@/lib/utils";
 import { PipelineBoard, type BoardApplication } from "@/components/pipeline-board";
 import { JobStatusMenu } from "@/components/job-status-menu";
+import { JobDraftBanner } from "@/components/job-draft-banner";
 
 export async function generateMetadata({
   params,
@@ -132,6 +133,10 @@ export default async function PipelinePage({
           )}
         </div>
       </div>
+
+      {canManage(membership.role) && (
+        <JobDraftBanner orgSlug={orgSlug} jobId={jobId} status={job.status} />
+      )}
 
       <PipelineBoard
         orgSlug={orgSlug}
