@@ -54,52 +54,67 @@ export default async function CareerPage({
   const orgName = org.name.trim();
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-x-16 gap-y-12 px-6 py-14 lg:grid-cols-[19rem_1fr] lg:py-20">
+    <div className="mx-auto max-w-5xl px-6 py-10 sm:py-12">
       {/* ------------------------------------------------------------------
-          Kolom kiri — identitas perusahaan, menempel saat digulir.
+          Hero
 
-          Judul besarnya sengaja kalimat pendek yang tetap, dan nama
-          perusahaan diturunkan ke baris sendiri yang lebih kecil. Versi lama
-          menyusun "Bergabung dengan {nama}" sebagai satu judul 34px, dan
-          dengan nama berhuruf besar sepanjang "PT. CITRAMEGAH KARUNIA
-          BERSAMA" hasilnya patah di tempat aneh dan terbaca seperti
-          berteriak.
+          Poster menggantikan judul teks yang dulu ada di sini, bukan menumpuk
+          di atasnya — isinya menyampaikan pesan yang sama (ajakan bergabung,
+          nilai perusahaan) dengan jauh lebih kuat.
+
+          Tapi seluruh teks di poster itu adalah piksel: pembaca layar tidak
+          bisa membacanya, mesin pencari tidak bisa mengindeksnya, dan pada
+          lebar ponsel hurufnya menyusut jadi sekitar 5px — tidak terbaca.
+          Karena itu poster hanya tampil dari 640px ke atas, dan di bawah itu
+          diganti judul teks sungguhan. Isi `alt` menanggung pesan poster untuk
+          pembaca layar.
           ------------------------------------------------------------------ */}
-      <aside className="lg:sticky lg:top-12 lg:self-start">
+      <div className="hidden overflow-hidden rounded-surface border border-line shadow-sm sm:block">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/poster-karier.webp"
+          srcSet="/poster-karier-sm.webp 900w, /poster-karier.webp 1717w"
+          sizes="(max-width: 1024px) 100vw, 1024px"
+          width={1717}
+          height={916}
+          alt={`Bergabunglah bersama ${orgName} — bangun masa depan bersama. Nilai kami: keselamatan utama, kerja sama profesional, integritas dan inovasi, serta peduli dan bertanggung jawab.`}
+          className="block h-auto w-full"
+        />
+      </div>
+
+      {/* Hero teks — hanya di layar kecil, tempat poster tidak terbaca */}
+      <div className="sm:hidden">
         <p className="text-label uppercase tracking-[0.16em] text-gold-700">
           Karier
         </p>
-        <h1 className="mt-4 text-display text-ink">Bergabung dengan tim kami</h1>
+        <h1 className="mt-4 text-display text-ink">Bergabunglah bersama kami</h1>
         <p className="mt-4 text-body font-semibold text-ink-soft">{orgName}</p>
+      </div>
 
-        {org.about ? (
-          <p className="mt-6 text-body leading-relaxed whitespace-pre-wrap text-muted">
-            {org.about}
-          </p>
-        ) : (
-          <p className="mt-6 text-body leading-relaxed text-muted">
-            Kami membuka kesempatan bagi orang-orang yang ingin tumbuh bersama.
-            Lihat posisi yang tersedia di samping.
-          </p>
-        )}
+      {/* Deskripsi perusahaan dan tautan situs, di bawah hero mana pun yang
+          sedang tampil. */}
+      {(org.about || org.website) && (
+        <div className="mt-8 flex flex-wrap items-start justify-between gap-6">
+          {org.about && (
+            <p className="max-w-2xl text-body leading-relaxed whitespace-pre-wrap text-muted">
+              {org.about}
+            </p>
+          )}
+          {org.website && (
+            <a
+              href={org.website}
+              target="_blank"
+              rel="noreferrer noopener"
+              className={buttonClass({ variant: "secondary" })}
+            >
+              Situs perusahaan
+            </a>
+          )}
+        </div>
+      )}
 
-        {org.website && (
-          <a
-            href={org.website}
-            target="_blank"
-            rel="noreferrer noopener"
-            className={buttonClass({
-              variant: "secondary",
-              className: "mt-8",
-            })}
-          >
-            Situs perusahaan
-          </a>
-        )}
-      </aside>
-
-      {/* Kolom kanan — daftar posisi */}
-      <div className="min-w-0">
+      {/* Daftar posisi */}
+      <div className="mt-14 min-w-0">
         <div className="flex items-baseline justify-between border-b border-line pb-4">
           <h2 className="text-heading text-ink">Posisi terbuka</h2>
           <span className="tabular rounded-full bg-line-soft px-2.5 py-0.5 text-caption font-semibold text-ink-soft ring-1 ring-inset ring-line">
