@@ -66,12 +66,12 @@ export function ApplyForm({
     );
   }
 
+  /* Form ini sengaja tanpa encType. Ketika action-nya berupa Server Action,
+     React yang mengatur encType dan method sendiri — ia selalu memakai
+     multipart/form-data dan menimpa nilai apa pun yang ditulis di sini, sambil
+     memperingatkan di konsol. Unggahan berkas tetap bekerja. */
   return (
-    <form
-      action={action}
-      className="mt-8 space-y-6"
-      encType="multipart/form-data"
-    >
+    <form action={action} className="mt-8 space-y-6">
       {/* Honeypot: tersembunyi dari manusia, diisi oleh bot. */}
       <div aria-hidden className="absolute left-[-9999px] h-0 w-0 overflow-hidden">
         <label htmlFor="website">Website</label>
