@@ -36,8 +36,16 @@ jobs:
           sudo apt-get install -y postgresql-16
       - name: Run tenant isolation tests
         run: |
-          sudo chmod -R a+rX "$GITHUB_WORKSPACE"
+          # Test dijalankan sebagai user `postgres`, yang tidak bisa menelusuri
+          # home directory runner. Membuka izin $GITHUB_WORKSPACE saja tidak cukup
+          # karena direktori induknya tetap tertutup. Jadi salin ke /tmp dulu.
+          #
+          # Struktur salinan harus /tmp/rls-ci/supabase/... karena run.sh menghitung
+          # ROOT sebagai dua level di atas dirinya, lalu mencari $ROOT/supabase/migrations.
+          rm -rf /tmp/rls-ci && mkdir -p /tmp/rls-ci
+          cp -r "$GITHUB_WORKSPACE/supabase" /tmp/rls-ci/
+          chmod -R a+rX /tmp/rls-ci
           sudo -u postgres env \
             PGBIN=/usr/lib/postgresql/16/bin \
             TMPDIR=/tmp \
-            bash "$GITHUB_WORKSPACE/supabase/tests/run.sh"
+            bash /tmp/rls-ci/supabase/tests/run.sh
