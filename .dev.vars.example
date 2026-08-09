@@ -1,0 +1,20 @@
+# ============================================================
+# Secret runtime untuk pratinjau Cloudflare lokal (npm run preview).
+# Salin jadi .dev.vars lalu isi. Berkas .dev.vars sudah di-ignore git.
+#
+# Ini BUKAN pengganti .env.local:
+#
+#   .env.local   dibaca saat `next build` dan `next dev`.
+#                Wajib berisi NEXT_PUBLIC_* karena nilainya di-inline ke
+#                bundle browser pada saat build, bukan saat runtime.
+#
+#   .dev.vars    dibaca oleh runtime Workers saat pratinjau lokal.
+#                Isinya secret sisi server saja.
+#
+# Di produksi, nilai di bawah dipasang lewat:
+#   wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+#   wrangler secret put CRON_SECRET
+# ============================================================
+
+SUPABASE_SERVICE_ROLE_KEY=
+CRON_SECRET=

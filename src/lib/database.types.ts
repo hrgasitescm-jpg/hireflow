@@ -899,6 +899,11 @@ export type Database = {
         Args: { p_job_id: string };
         Returns: { stage_id: string | null; total: number }[];
       };
+      /** true = permintaan harus ditolak. Lihat 0004_rate_limit.sql */
+      check_rate_limit: {
+        Args: { p_key: string; p_max: number; p_window_seconds: number };
+        Returns: boolean;
+      };
     };
     Enums: {
       application_status: 'active' | 'hired' | 'rejected' | 'withdrawn' | 'on_hold';

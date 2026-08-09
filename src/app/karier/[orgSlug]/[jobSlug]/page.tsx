@@ -12,7 +12,15 @@ import {
 } from "@/lib/utils";
 import { ApplyForm } from "./apply-form";
 
-export const revalidate = 60;
+/**
+ * Dirender per permintaan, bukan ISR.
+ *
+ * ISR di Cloudflare Workers menuntut binding tambahan — R2 untuk incremental
+ * cache dan Durable Object sebagai antrean revalidasi — sementara SSR jalan
+ * tanpa konfigurasi apa pun. Untuk career page satu perusahaan yang trafiknya
+ * kecil, selisih kecepatannya tidak sepadan dengan biaya dan kerumitannya.
+ */
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,

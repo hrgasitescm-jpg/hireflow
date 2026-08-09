@@ -7,6 +7,16 @@ const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
+    /**
+     * Optimasi gambar bawaan Next.js memerlukan sharp, yang tidak bisa
+     * berjalan di Cloudflare Workers. Di sana optimasi hanya tersedia lewat
+     * Cloudflare Images yang berbayar.
+     *
+     * Aplikasi ini hanya memakai next/image untuk dua logo statis berukuran
+     * kecil di src/components/logo.tsx, jadi mematikan optimasi tidak
+     * merugikan apa pun — dan menghemat biaya yang tidak perlu.
+     */
+    unoptimized: true,
     remotePatterns: supabaseHost
       ? [{ protocol: "https", hostname: supabaseHost, pathname: "/storage/v1/object/public/**" }]
       : [],
@@ -30,3 +40,14 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+/**
+ * Menjadikan binding Cloudflare (env, assets) tersedia saat `next dev`.
+ *
+ * Ditulis sebagai side effect setelah export default — itu memang bentuk yang
+ * dihasilkan `opennextjs-cloudflare migrate`, dan urutannya tidak masalah
+ * karena hanya berjalan di proses dev, bukan saat build produksi.
+ */
+import("@opennextjs/cloudflare").then((m) =>
+  m.initOpenNextCloudflareForDev(),
+);

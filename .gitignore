@@ -24,3 +24,11 @@ supabase/.temp
 
 # arsip lokal, bukan bagian dari source
 _to_delete/
+
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example

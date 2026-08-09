@@ -3,7 +3,15 @@ import { notFound } from "next/navigation";
 import { getPublicOrg } from "@/lib/public-data";
 import { LogoMark } from "@/components/logo";
 
-export const revalidate = 60;
+/**
+ * Dirender per permintaan, bukan ISR.
+ *
+ * ISR di Cloudflare Workers menuntut binding tambahan — R2 untuk incremental
+ * cache dan Durable Object sebagai antrean revalidasi — sementara SSR jalan
+ * tanpa konfigurasi apa pun. Untuk career page satu perusahaan yang trafiknya
+ * kecil, selisih kecepatannya tidak sepadan dengan biaya dan kerumitannya.
+ */
+export const dynamic = "force-dynamic";
 
 export default async function CareerLayout({
   children,

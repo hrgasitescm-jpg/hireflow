@@ -15,31 +15,38 @@ export type ApplyState = {
 const CONSENT_VERSION = "2026-08-01";
 
 /**
- * Rate limit sederhana berbasis memori.
+ * Rate limit form lamaran publik.
  *
- * PENTING: ini hanya efektif untuk satu instance. Di serverless dengan
- * banyak instance, ganti dengan Upstash Redis atau tabel Postgres
- * sebelum produksi. Lihat catatan di README.
+ * Penghitungnya ada di Postgres (lihat 0004_rate_limit.sql), bukan di memori
+ * proses. Versi lama memakai Map, dan itu hanya bekerja kalau aplikasi
+ * berjalan sebagai satu instance berumur panjang — di Cloudflare Workers
+ * setiap isolate punya memorinya sendiri dan berumur pendek, sehingga
+ * batasnya praktis hilang.
+ *
+ * Kalau pemeriksaan gagal karena masalah jaringan atau database, permintaan
+ * DILOLOSKAN, bukan ditolak. Rate limit adalah perlindungan terhadap
+ * penyalahgunaan, bukan kontrol keamanan; menolak semua pelamar hanya karena
+ * satu query gagal jauh lebih merugikan daripada meloloskan beberapa
+ * permintaan berlebih.
  */
-const attempts = new Map<string, { count: number; resetAt: number }>();
-const WINDOW_MS = 60 * 60 * 1000;
+const WINDOW_SECONDS = 60 * 60;
 const MAX_PER_WINDOW = 10;
 
-function rateLimited(key: string): boolean {
-  const now = Date.now();
-  const entry = attempts.get(key);
+async function rateLimited(
+  supabase: ReturnType<typeof createAdminClient>,
+  key: string,
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc("check_rate_limit", {
+    p_key: key,
+    p_max: MAX_PER_WINDOW,
+    p_window_seconds: WINDOW_SECONDS,
+  });
 
-  if (!entry || entry.resetAt < now) {
-    attempts.set(key, { count: 1, resetAt: now + WINDOW_MS });
-    // Bersihkan entri kedaluwarsa sesekali agar Map tidak tumbuh terus.
-    if (attempts.size > 5000) {
-      for (const [k, v] of attempts) if (v.resetAt < now) attempts.delete(k);
-    }
+  if (error) {
+    console.error("Pemeriksaan rate limit gagal:", error.message);
     return false;
   }
-
-  entry.count += 1;
-  return entry.count > MAX_PER_WINDOW;
+  return data === true;
 }
 
 function sanitizeFileName(name: string): string {
@@ -58,13 +65,17 @@ export async function submitApplication(
   formData: FormData,
 ): Promise<ApplyState> {
   // ---------- 1. Rate limit ----------
+  // Service role dipakai di sepanjang aksi ini karena pelamarnya anonim.
+  // Setiap query difilter ketat dan setiap input divalidasi lebih dulu.
+  const supabase = createAdminClient();
+
   const headerList = await headers();
   const ip =
     headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     headerList.get("x-real-ip") ??
     "unknown";
 
-  if (rateLimited(`${ip}:${jobSlug}`)) {
+  if (await rateLimited(supabase, `${ip}:${jobSlug}`)) {
     return {
       error: "Terlalu banyak percobaan. Coba lagi dalam satu jam.",
     };
@@ -95,9 +106,6 @@ export async function submitApplication(
   if (fileError || !file) return { error: fileError ?? "CV wajib diunggah" };
 
   // ---------- 3. Pastikan lowongan memang terbuka ----------
-  // Service role dipakai di sini karena pelamar anonim. Query difilter ketat.
-  const supabase = createAdminClient();
-
   const { data: org } = await supabase
     .from("organizations")
     .select("id")
