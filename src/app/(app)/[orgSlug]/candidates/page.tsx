@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Users, Search } from "lucide-react";
+import { Users, Search, Download } from "lucide-react";
 import { requireMembership } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -60,6 +60,19 @@ export default async function CandidatesPage({
         eyebrow={total > 0 ? `${total} kandidat` : undefined}
         title="Kandidat"
         description="Semua orang yang pernah melamar ke organisasi ini, termasuk lamaran yang sudah ditutup."
+        action={
+          total > 0 ? (
+            /* Tautan biasa, bukan tombol ber-JavaScript: unduhan berkas
+               ditangani browser sendiri, jadi tidak perlu state atau efek. */
+            <a
+              href={`/api/export/candidates?org=${orgSlug}`}
+              className={buttonClass({ variant: "secondary" })}
+            >
+              <Download className="size-4" aria-hidden />
+              Ekspor CSV
+            </a>
+          ) : undefined
+        }
       />
 
       <form className="mb-5 flex max-w-md gap-2">

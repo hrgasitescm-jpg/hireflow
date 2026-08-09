@@ -29,6 +29,14 @@ import {
   setApplicationStatus,
 } from "@/app/(app)/[orgSlug]/jobs/[jobId]/actions";
 
+type DrawerHistory = {
+  id: string;
+  at: string;
+  from: string | null;
+  to: string | null;
+  by: string | null;
+};
+
 type DrawerNote = {
   id: string;
   body: string;
@@ -59,6 +67,11 @@ export function CandidateDrawer({
     link: string;
     stageName: string;
   } | null>(null);
+  const [rejection, setRejection] = useState<{
+    reason: string | null;
+    at: string | null;
+  } | null>(null);
+  const [history, setHistory] = useState<DrawerHistory[]>([]);
   const [loadingDetail, setLoadingDetail] = useState(true);
   const [noteBody, setNoteBody] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -83,12 +96,16 @@ export function CandidateDrawer({
           resumeDocId: string | null;
           coverLetter: string | null;
           whatsapp: { link: string; stageName: string } | null;
+          rejection: { reason: string | null; at: string | null } | null;
+          history: DrawerHistory[];
         }) => {
         if (cancelled) return;
         setNotes(data.notes);
         setResumeDocId(data.resumeDocId);
         setCoverLetter(data.coverLetter);
         setWhatsapp(data.whatsapp);
+        setRejection(data.rejection);
+        setHistory(data.history ?? []);
       })
       .catch(() => !cancelled && setError("Gagal memuat detail kandidat."))
       .finally(() => !cancelled && setLoadingDetail(false));
@@ -217,6 +234,68 @@ export function CandidateDrawer({
                   className="text-small leading-relaxed text-ink-soft"
                 />
               </div>
+            </section>
+          )}
+
+          {/* Alasan penolakan. Tersimpan sejak awal saat recruiter menolak
+              kandidat, tapi tidak pernah ditampilkan — orang yang membuka
+              kembali kandidat ini tidak tahu kenapa ia ditolak. */}
+          {rejection && (
+            <section>
+              <h3 className="mb-2 text-label uppercase text-muted">
+                Ditolak
+              </h3>
+              <div className="rounded-control bg-red-50 px-4 py-3 ring-1 ring-inset ring-red-200">
+                <p className="text-small leading-relaxed text-red-800">
+                  {rejection.reason || "Tanpa alasan tercatat."}
+                </p>
+                {rejection.at && (
+                  <p className="mt-1.5 text-caption text-red-700">
+                    {formatDate(rejection.at)}
+                  </p>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* Riwayat perpindahan tahap. Dicatat otomatis oleh trigger database
+              sejak awal, termasuk siapa yang memindahkan — tapi belum pernah
+              terlihat. Berguna untuk menelusuri kandidat yang tersangkut lama
+              atau keputusan yang perlu dipertanggungjawabkan. */}
+          {history.length > 0 && (
+            <section>
+              <h3 className="mb-2 text-label uppercase text-muted">
+                Riwayat tahap
+              </h3>
+              <ol className="space-y-2.5">
+                {history.map((h) => (
+                  <li key={h.id} className="flex gap-3">
+                    <span
+                      aria-hidden
+                      className="mt-1.5 size-1.5 shrink-0 rounded-full bg-gold-400"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-small text-ink">
+                        {h.from ? (
+                          <>
+                            {h.from} <span className="text-subtle">→</span>{" "}
+                            <span className="font-semibold">{h.to ?? "—"}</span>
+                          </>
+                        ) : (
+                          <>
+                            Masuk ke{" "}
+                            <span className="font-semibold">{h.to ?? "—"}</span>
+                          </>
+                        )}
+                      </p>
+                      <p className="mt-0.5 text-caption text-muted">
+                        {formatDate(h.at)}
+                        {h.by ? ` · oleh ${h.by}` : " · otomatis"}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
             </section>
           )}
 
