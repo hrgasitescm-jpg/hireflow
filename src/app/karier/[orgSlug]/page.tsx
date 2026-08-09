@@ -1,7 +1,17 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  ShieldCheck,
+  Users,
+  TrendingUp,
+  Sprout,
+  FileText,
+  Clock,
+  Lock,
+  Rocket,
+} from "lucide-react";
 import { getPublicJobs, getPublicOrg } from "@/lib/public-data";
 import { buttonClass } from "@/components/ui";
 import { RichContent } from "@/components/rich-content";
@@ -42,6 +52,59 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * Nilai perusahaan dan keunggulan layanan.
+ *
+ * Teksnya diambil dari poster supaya keduanya selaras. Kalau poster diganti
+ * dan isinya berubah, daftar ini ikut diperbarui — kalau tidak, pengunjung
+ * desktop dan pengunjung ponsel akan membaca janji yang berbeda.
+ */
+const VALUES = [
+  {
+    icon: ShieldCheck,
+    title: "Keselamatan Utama",
+    body: "Tidak ada target yang lebih penting daripada pulangnya setiap orang dengan selamat.",
+  },
+  {
+    icon: Users,
+    title: "Kerja Sama Profesional",
+    body: "Pekerjaan lapangan hanya berjalan kalau setiap peran saling menopang.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Integritas & Inovasi",
+    body: "Jujur pada hasil, dan terbuka pada cara kerja yang lebih baik.",
+  },
+  {
+    icon: Sprout,
+    title: "Peduli & Bertanggung Jawab",
+    body: "Pada lingkungan tempat kami bekerja dan masyarakat di sekitarnya.",
+  },
+] as const;
+
+const BENEFITS = [
+  {
+    icon: FileText,
+    title: "Proses Mudah",
+    body: "Lamar kapan saja dan di mana saja, cukup lewat halaman ini.",
+  },
+  {
+    icon: Clock,
+    title: "Informasi Transparan",
+    body: "Rincian posisi disampaikan lengkap sejak awal.",
+  },
+  {
+    icon: Lock,
+    title: "Keamanan Data Terjamin",
+    body: "Data pribadi kamu diproses sesuai UU Pelindungan Data Pribadi.",
+  },
+  {
+    icon: Rocket,
+    title: "Peluang Tanpa Batas",
+    body: "Berkembang bersama perusahaan yang terus bertumbuh.",
+  },
+] as const;
+
 export default async function CareerPage({
   params,
 }: {
@@ -55,34 +118,33 @@ export default async function CareerPage({
   const orgName = org.name.trim();
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10 sm:py-12">
+    <>
       {/* ------------------------------------------------------------------
-          Hero
+          Hero penuh lebar.
 
-          Poster menggantikan judul teks yang dulu ada di sini, bukan menumpuk
-          di atasnya — isinya menyampaikan pesan yang sama (ajakan bergabung,
-          nilai perusahaan) dengan jauh lebih kuat.
+          Keluar dari wadah max-w-5xl supaya membentang dari tepi ke tepi.
+          Poster yang duduk di dalam kotak bergaris terbaca sebagai gambar yang
+          ditempel ke halaman; tanpa kotak ia terbaca sebagai bagian situs.
 
-          Tapi seluruh teks di poster itu adalah piksel: pembaca layar tidak
-          bisa membacanya, mesin pencari tidak bisa mengindeksnya, dan pada
-          lebar ponsel hurufnya menyusut jadi sekitar 5px — tidak terbaca.
-          Karena itu poster hanya tampil dari 640px ke atas, dan di bawah itu
-          diganti judul teks sungguhan. Isi `alt` menanggung pesan poster untuk
-          pembaca layar.
+          Tetap hanya dari 640px ke atas. Seluruh teks di poster adalah piksel:
+          mesin pencari tidak bisa membacanya, dan pada lebar ponsel hurufnya
+          menyusut jadi sekitar 5px. Isinya kini juga hadir sebagai bagian HTML
+          di bawah, sehingga pengunjung ponsel tidak kehilangan apa pun.
           ------------------------------------------------------------------ */}
-      <div className="hidden overflow-hidden rounded-surface border border-line shadow-sm sm:block">
+      <div className="hidden border-b border-line sm:block">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/poster-karier.webp"
           srcSet="/poster-karier-sm.webp 900w, /poster-karier.webp 1717w"
-          sizes="(max-width: 1024px) 100vw, 1024px"
+          sizes="100vw"
           width={1717}
           height={916}
-          alt={`Bergabunglah bersama ${orgName} — bangun masa depan bersama. Nilai kami: keselamatan utama, kerja sama profesional, integritas dan inovasi, serta peduli dan bertanggung jawab.`}
+          alt={`Bergabunglah bersama ${orgName} — bangun masa depan bersama.`}
           className="block h-auto w-full"
         />
       </div>
 
+    <div className="mx-auto max-w-5xl px-6 py-12 sm:py-14">
       {/* Hero teks — hanya di layar kecil, tempat poster tidak terbaca */}
       <div className="sm:hidden">
         <p className="text-label uppercase tracking-[0.16em] text-gold-700">
@@ -123,6 +185,69 @@ export default async function CareerPage({
           )}
         </div>
       )}
+
+      {/* ------------------------------------------------------------------
+          Nilai perusahaan
+
+          Isi ini ada di dalam poster, tapi di sana ia berupa piksel: tidak
+          terbaca mesin pencari, tidak terbaca pembaca layar, dan sama sekali
+          tidak tampil di ponsel karena posternya disembunyikan di bawah 640px.
+
+          Dibangun ulang sebagai HTML supaya semua pengunjung melihatnya, dan
+          supaya halaman ini punya isi — bukan sekadar gambar lalu satu daftar.
+          ------------------------------------------------------------------ */}
+      <section className="mt-16">
+        <h2 className="text-title text-ink">Kenapa bergabung dengan kami</h2>
+        <p className="mt-2 max-w-2xl text-body text-muted">
+          Empat hal yang kami pegang dalam bekerja, di lapangan maupun di
+          kantor.
+        </p>
+
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {VALUES.map(({ icon: Icon, title, body }) => (
+            <div
+              key={title}
+              className="rounded-surface border border-line bg-surface p-5 shadow-xs"
+            >
+              <span className="flex size-11 items-center justify-center rounded-surface bg-gold-50 text-gold-700 ring-1 ring-inset ring-gold-200">
+                <Icon className="size-5" aria-hidden />
+              </span>
+              <h3 className="mt-4 text-body font-semibold text-ink">{title}</h3>
+              <p className="mt-1.5 text-small leading-relaxed text-muted">
+                {body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------------
+          Keunggulan melamar lewat halaman ini
+
+          Sengaja dibuat pita ringkas, bukan kartu besar seperti nilai
+          perusahaan. Isinya menenangkan pelamar soal proses dan keamanan data
+          — penting karena form ini meminta CV dan nomor pribadi — tapi ia
+          bukan alasan utama orang melamar, jadi tidak pantas memakai ruang
+          sebanyak itu.
+          ------------------------------------------------------------------ */}
+      <section className="mt-12 rounded-surface bg-line-soft/70 px-6 py-7 ring-1 ring-inset ring-line">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {BENEFITS.map(({ icon: Icon, title, body }) => (
+            <div key={title} className="flex gap-3">
+              <Icon
+                className="mt-0.5 size-[1.125rem] shrink-0 text-gold-600"
+                aria-hidden
+              />
+              <div className="min-w-0">
+                <p className="text-small font-semibold text-ink">{title}</p>
+                <p className="mt-1 text-caption leading-relaxed text-muted">
+                  {body}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Daftar posisi */}
       <div className="mt-14 min-w-0">
@@ -219,6 +344,35 @@ export default async function CareerPage({
           </ul>
         )}
       </div>
+
+      {/* ------------------------------------------------------------------
+          Penutup
+
+          Career page yang berakhir tepat setelah daftar lowongan terasa
+          menggantung, terutama ketika lowongannya sedikit. Bagian ini memberi
+          jalan bagi pengunjung yang tidak menemukan posisi cocok — tanpa
+          menjanjikan apa pun yang belum bisa ditepati.
+          ------------------------------------------------------------------ */}
+      <section className="panel-ink mt-16 rounded-surface px-8 py-10 text-center">
+        <h2 className="text-title text-white">
+          Belum menemukan posisi yang cocok?
+        </h2>
+        <p className="mx-auto mt-3 max-w-md text-body leading-relaxed text-stone-400">
+          Lowongan baru kami umumkan di halaman ini. Simpan alamatnya, atau
+          ikuti kanal resmi {orgName} untuk kabar berikutnya.
+        </p>
+        {org.website && (
+          <a
+            href={org.website}
+            target="_blank"
+            rel="noreferrer noopener"
+            className={buttonClass({ variant: "gold", className: "mt-7" })}
+          >
+            Kunjungi situs perusahaan
+          </a>
+        )}
+      </section>
     </div>
+    </>
   );
 }
